@@ -1,0 +1,8 @@
+.env
+browser_profiles/
+data/
+__pycache__/
+*.pyc
+har/
+parse_har.py
+parse_har.js

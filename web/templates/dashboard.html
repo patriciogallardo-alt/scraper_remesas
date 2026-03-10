@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scraper de Remesas — Dashboard</title>
+    <meta name="description" content="Dashboard de comparación de remesas entre RIA, Western Union y AFEX">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <h1>💱 Scraper de Remesas</h1>
+        <div class="header-actions">
+            <div class="meta-badge">
+                <span class="dot"></span>
+                <span id="meta-info">Cargando...</span>
+            </div>
+            <button class="btn btn-secondary" id="btn-download">📥 Descargar Excel</button>
+            <button class="btn btn-primary" id="btn-scrape">⚡ Ejecutar Scraping</button>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- Stats -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Cotizaciones</div>
+                <div class="stat-value accent" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Proveedores</div>
+                <div class="stat-value green" id="stat-agents">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Países</div>
+                <div class="stat-value orange" id="stat-countries">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Mejor Tasa</div>
+                <div class="stat-value" id="stat-best-rate">-</div>
+            </div>
+        </section>
+
+        <!-- Filters -->
+        <section class="filters-bar">
+            <div class="filter-group">
+                <label class="filter-label">Proveedor</label>
+                <select class="filter-select" id="filter-agent"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">País Destino</label>
+                <select class="filter-select" id="filter-country"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Moneda Destino</label>
+                <select class="filter-select" id="filter-currency"></select>
+            </div>
+        </section>
+
+        <!-- Table -->
+        <section class="table-container" id="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Timestamp <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(1)">Agente <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(2)">País Destino <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(3)">Mon. Origen <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(4)">Mon. Destino <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(5)">Enviado (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(6)">Recibido <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(7)">Tasa Cambio <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(8)">Fee Base <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(9)">Fee Impuesto <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(10)">Total Cobrado <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(11)">Mét. Recaudación <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(12)">Mét. Dispersión <span class="sort-arrow"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+            <h3>Sin datos disponibles</h3>
+            <p>Ejecuta el scraping para obtener cotizaciones de remesas.</p>
+        </div>
+
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay" style="display:none">
+        <div style="text-align:center">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Ejecutando scrapers...<br>Esto puede tomar unos minutos</p>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

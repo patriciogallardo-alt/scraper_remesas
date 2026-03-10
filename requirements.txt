@@ -1,0 +1,5 @@
+playwright
+requests
+flask
+openpyxl
+python-dotenv
