@@ -24,14 +24,18 @@ LOGIN_URL = "https://secure.riamoneytransfer.com"
 class RiaScraper(BaseScraper):
     name = "RIA"
 
-    def __init__(self):
+    def __init__(self, shared_context=None):
         self.playwright = None
-        self.browser = None
-        self.context = None
+        self.context = shared_context
         self.page = None
 
     async def _init_browser(self):
-        """Inicia Playwright con Chrome real del sistema (no test Chromium)."""
+        """Inicia Playwright con perfil persistente o reusa el global."""
+        if self.context:
+            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+            logger.info("[RIA] Reutilizando contexto global del orquestador.")
+            return
+
         import os
         profile_dir = os.path.join(BROWSER_PROFILES_DIR, "ria")
         os.makedirs(profile_dir, exist_ok=True)

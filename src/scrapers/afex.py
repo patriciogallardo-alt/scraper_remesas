@@ -24,7 +24,7 @@ GRAPHQL_URL = "https://jmpw2xetb3.execute-api.us-east-2.amazonaws.com/prod/"
 # Para cash pickup y depósitos, cotizamos solo en un subconjunto pequeño
 # de combinaciones para evitar explosión de tiempo de ejecución.
 MAX_CITIES_CASH_PICKUP = 3
-MAX_BANKS_DEPOSITO = 10
+MAX_BANKS_DEPOSITO = 3
 
 # GraphQL query para getFeelookup
 FEELOOKUP_QUERY = """
