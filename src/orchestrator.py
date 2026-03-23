@@ -73,6 +73,14 @@ async def run_all_scrapers(
             ]
         )
 
+        async def route_interceptor(route):
+            if route.request.resource_type in ["image", "stylesheet", "media", "font"]:
+                await route.abort()
+            else:
+                await route.continue_()
+
+        await shared_context.route("**/*", route_interceptor)
+
     scrapers = []
     if run_afex:
         scrapers.append(("AFEX", AfexScraper()))
