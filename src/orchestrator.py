@@ -42,7 +42,7 @@ async def run_all_scrapers(
     shared_playwright = None
     shared_context = None
     
-    if run_ria or run_wu:
+    if run_ria:
         logger.info("=== Iniciando Contexto Compartido Único de Navegador ===")
         shared_playwright = await async_playwright().start()
         # Usamos la carpeta 'wu' porque contiene los cookies autorizados crudos que la nube lee

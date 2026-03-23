@@ -1,12 +1,14 @@
 """
 Scraper de Western Union (westernunion.com/cl).
-Usa Playwright con stealth patches + perfil persistente, luego GraphQL API /router/.
+Extrae cookies del perfil persistente y usa requests para API GraphQL /router/.
 """
 import asyncio
 import hashlib
 import json
 import logging
+import os
 import random
+import requests
 import uuid
 import time
 from datetime import datetime
@@ -209,92 +211,75 @@ class WesternUnionScraper(BaseScraper):
     DEVICE_ID = "99b8997b-93cc-1544-f38a-1058258c474b"
 
     def __init__(self, shared_context=None):
+        self.shared_context = shared_context  # Solo para extraer cookies
         self.playwright = None
-        self.context = shared_context
+        self.context = None
         self.page = None
+        self.session = requests.Session()  # Sesión HTTP liviana
+        self.cookie_string = ""
         self.session_headers = {}
         self.fingerprint_id = None
         self.device_id = self.DEVICE_ID
 
-    async def _init_browser(self):
-        """Inicia Playwright con Chrome real o reusa global."""
-        if self.context:
-            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
-            await self.context.add_init_script(STEALTH_JS)
-            await self.page.evaluate(STEALTH_JS)
-            logger.info("[WU] Reutilizando contexto compartido global. Aplicando evasión bot.")
-            return
-
+    async def _extract_cookies(self):
+        """
+        Extrae cookies del perfil persistente SIN navegar a ninguna página.
+        Usa el contexto compartido si existe, o abre uno propio brevemente.
+        Esto consume ~0MB de RAM extra porque no carga ningún sitio web.
+        """
         import os
-        profile_dir = os.path.join(BROWSER_PROFILES_DIR, "wu")
-        os.makedirs(profile_dir, exist_ok=True)
+        context = self.shared_context
+        own_playwright = None
+        own_context = None
 
-        self.playwright = await async_playwright().start()
+        if not context:
+            # Abrir contexto propio solo para leer cookies
+            profile_dir = os.path.join(BROWSER_PROFILES_DIR, "wu")
+            os.makedirs(profile_dir, exist_ok=True)
+            is_cloud = os.getenv("RENDER") == "true"
 
-        # Args que NO delatan automatización (sin flags que Chrome muestre en banner)
-        chrome_args = [
-            "--disable-infobars",
-            "--no-first-run",
-            "--no-default-browser-check",
-            "--window-size=1280,800",
-        ]
+            own_playwright = await async_playwright().start()
+            ignored = ["--enable-automation", "--enable-blink-features=IdleDetection"]
+            if not is_cloud:
+                ignored.append("--no-sandbox")
 
-        # Eliminar flags que delatan automatización:
-        # --enable-automation: agrega banner "Chrome is being controlled"
-        # --no-sandbox: agrega banner "no-sandbox" que WU detecta
-        # --enable-blink-features=IdleDetection: flag interno de Playwright
-        is_cloud = os.getenv("RENDER") == "true"
-        ignored_default_args = [
-            "--enable-automation",
-            "--enable-blink-features=IdleDetection",
-        ]
-        if not is_cloud:
-            # En local quitamos --no-sandbox para evadir anti-bots, en Linux/Docker es obligatorio
-            ignored_default_args.append("--no-sandbox")
-        self.context = await self.playwright.chromium.launch_persistent_context(
-            profile_dir,
-            headless=is_cloud,
-            viewport={"width": 1280, "height": 800},
-            locale="es-CL",
-            timezone_id="America/Santiago",
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-            ignore_default_args=ignored_default_args,
-            args=chrome_args,
-        )
+            own_context = await own_playwright.chromium.launch_persistent_context(
+                profile_dir,
+                headless=True,
+                ignore_default_args=ignored,
+            )
+            context = own_context
 
-        self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+        # Leer cookies almacenadas (sin navegar)
+        cookies = await context.cookies()
+        wu_cookies = {c["name"]: c["value"] for c in cookies if "westernunion" in c.get("domain", "")}
+        self.cookie_string = "; ".join(f"{k}={v}" for k, v in wu_cookies.items())
 
-        # Inyectar stealth patches ANTES de cualquier navegación
-        await self.context.add_init_script(STEALTH_JS)
-        # También inyectar en la página actual
-        await self.page.evaluate(STEALTH_JS)
+        logger.info(f"[WU] Cookies extraídas del perfil: {len(wu_cookies)} cookies WU")
 
-        logger.info("[WU] Browser iniciado con stealth patches.")
+        # Construir session headers de las cookies conocidas
+        self.session_headers = {
+            "x-wu-apikey": "1978",
+            "x-wu-sessionid": wu_cookies.get("wuSessionId", f"web-{uuid.uuid4()}"),
+            "x-wu-accesscode": wu_cookies.get("accessCode", ""),
+        }
+
+        # Generar fingerprint
+        seed = f"{self.device_id}-{time.time()}"
+        self.fingerprint_id = hashlib.md5(seed.encode()).hexdigest()
+
+        # Cerrar contexto propio si lo abrimos
+        if own_context:
+            await own_context.close()
+        if own_playwright:
+            await own_playwright.stop()
+
+        logger.info(f"[WU] Session headers construidos. Modo API pura activado.")
 
     async def _human_delay(self, min_sec=1.0, max_sec=3.0):
         """Delay aleatorio que simula comportamiento humano."""
         delay = random.uniform(min_sec, max_sec)
         await asyncio.sleep(delay)
-
-    async def _simulate_human_activity(self):
-        """Simula actividad humana: scroll, movimiento de mouse."""
-        try:
-            # Scroll suave aleatorio
-            scroll_y = random.randint(100, 400)
-            await self.page.evaluate(f"window.scrollBy(0, {scroll_y})")
-            await self._human_delay(0.5, 1.5)
-
-            # Mouse move a posición aleatoria
-            x = random.randint(200, 1000)
-            y = random.randint(200, 600)
-            await self.page.mouse.move(x, y)
-            await self._human_delay(0.3, 0.8)
-
-            # Scroll de vuelta
-            await self.page.evaluate(f"window.scrollBy(0, -{scroll_y // 2})")
-            await self._human_delay(0.3, 0.8)
-        except Exception:
-            pass
 
     async def _login(self):
         """
@@ -642,13 +627,11 @@ class WesternUnionScraper(BaseScraper):
         return headers
 
     async def _call_products(self, dest_country: str, dest_currency: str) -> dict:
-        """Llama al GraphQL API de productos/pricing con headers completos."""
-        # HAR usa formato "web-{uuid}" no "webapp-{uuid}"
+        """Llama al GraphQL API de productos/pricing via requests (sin browser)."""
         session_id = self.session_headers.get("x-wu-sessionid", f"web-{uuid.uuid4()}")
-        correlation_id = session_id  # HAR muestra que usan el mismo sessionId
+        correlation_id = session_id
         external_ref = f"webapp-{uuid.uuid4()}"
 
-        # Amount in WU is multiplied by 100 (centavos)
         amount_wu = SEND_AMOUNT_CLP * 100
         timestamp_ms = int(time.time() * 1000)
 
@@ -687,41 +670,28 @@ class WesternUnionScraper(BaseScraper):
         }
 
         headers = self._build_full_headers(correlation_id, external_ref)
+        # Inyectar cookies del perfil persistente
+        headers["Cookie"] = self.cookie_string
 
         payload = {
             "variables": variables,
             "query": PRODUCTS_QUERY
         }
 
-        # Ejecutar fetch DENTRO del contexto del browser (hereda cookies, TLS, etc.)
-        result = await self.page.evaluate('''async ([url, payload, hdrs]) => {
-            try {
-                const resp = await fetch(url, {
-                    method: "POST",
-                    headers: hdrs,
-                    body: JSON.stringify(payload),
-                    credentials: "include"
-                });
-                return {
-                    status: resp.status,
-                    ok: resp.ok,
-                    text: await resp.text()
-                };
-            } catch (err) {
-                return { status: 0, ok: false, text: err.toString() };
-            }
-        }''', [WU_ROUTER_URL, payload, headers])
+        # Llamada API pura con requests (0 MB de RAM extra)
+        resp = self.session.post(
+            WU_ROUTER_URL,
+            json=payload,
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
 
-        status = result.get("status")
-        text = result.get("text", "")
+        if not resp.ok:
+            logger.error(f"[WU] Response HTTP {resp.status_code}: {resp.text[:500]}")
+            raise Exception(f"HTTP {resp.status_code} en _call_products: {resp.text[:300]}")
 
-        if not result.get("ok"):
-            logger.error(f"[WU] Response HTTP {status}: {text[:500]}")
-            raise Exception(f"HTTP {status} en _call_products: {text[:300]}")
+        parsed = resp.json()
 
-        parsed = json.loads(text)
-
-        # Log para debug: ver estructura de respuesta
         if parsed.get("data", {}).get("products", {}).get("__typename") == "ErrorResponse":
             error_resp = parsed["data"]["products"]
             logger.error(f"[WU] ErrorResponse: {error_resp}")
@@ -731,18 +701,13 @@ class WesternUnionScraper(BaseScraper):
         return parsed
 
     async def scrape(self, destinations: list[dict]) -> list[QuoteResult]:
-        """Ejecuta scraping de WU para todos los destinos."""
+        """Ejecuta scraping de WU para todos los destinos via API pura."""
         results = []
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # 1. Init browser con stealth, capturar sesión
-        await self._init_browser()
-        await self._login()
-        await self._capture_session_headers()
-
-        # Simular actividad humana antes de las queries
-        await self._simulate_human_activity()
-        await self._human_delay(1, 3)
+        # 1. Extraer cookies del perfil (sin navegar, sin consumir RAM)
+        await self._extract_cookies()
+        logger.info("[WU] Modo API pura. Sin navegador web. Iniciando cotizaciones...")
 
         # 2. Iterate destinations con delays humanos
         for i, dest in enumerate(destinations):
@@ -855,8 +820,6 @@ class WesternUnionScraper(BaseScraper):
         return results
 
     async def close(self):
-        # Si playwright es None, el contexto es prestado del orquestador. NO cerrar.
-        if self.playwright:
-            if self.context:
-                await self.context.close()
-            await self.playwright.stop()
+        # WU ya no administra ningún browser propio en modo API.
+        # El contexto compartido se cierra desde el orquestador.
+        pass
