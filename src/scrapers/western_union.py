@@ -242,10 +242,10 @@ class WesternUnionScraper(BaseScraper):
             "--enable-blink-features=IdleDetection",
         ]
 
+        is_cloud = os.getenv("RENDER") == "true"
         self.context = await self.playwright.chromium.launch_persistent_context(
             profile_dir,
-            channel="chrome",
-            headless=False,
+            headless=is_cloud,
             viewport={"width": 1280, "height": 800},
             locale="es-CL",
             timezone_id="America/Santiago",

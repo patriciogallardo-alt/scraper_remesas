@@ -37,10 +37,10 @@ class RiaScraper(BaseScraper):
         os.makedirs(profile_dir, exist_ok=True)
 
         self.playwright = await async_playwright().start()
+        is_cloud = os.getenv("RENDER") == "true"
         self.context = await self.playwright.chromium.launch_persistent_context(
             profile_dir,
-            channel="chrome",  # Usa Chrome real, no test Chromium
-            headless=False,
+            headless=is_cloud,
             viewport={"width": 1280, "height": 800},
             locale="es-CL",
             timezone_id="America/Santiago",
