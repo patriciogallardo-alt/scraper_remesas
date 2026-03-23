@@ -208,24 +208,16 @@ class WesternUnionScraper(BaseScraper):
     # device-id persistente (se genera una vez y se reutiliza)
     DEVICE_ID = "99b8997b-93cc-1544-f38a-1058258c474b"
 
-    def __init__(self, shared_context=None):
+    def __init__(self):
         self.playwright = None
-        self.context = shared_context
+        self.context = None
         self.page = None
         self.session_headers = {}
         self.fingerprint_id = None
         self.device_id = self.DEVICE_ID
 
     async def _init_browser(self):
-        """Inicia Playwright con Chrome real o reusa global."""
-        if self.context:
-            # SIEMPRE crear una página NUEVA para WU (la de RIA puede estar crasheada)
-            self.page = await self.context.new_page()
-            await self.context.add_init_script(STEALTH_JS)
-            await self.page.evaluate(STEALTH_JS)
-            logger.info("[WU] Reutilizando contexto compartido global con página nueva. Stealth aplicado.")
-            return
-
+        """Inicia Playwright con Chrome real + stealth patches anti-detección."""
         import os
         profile_dir = os.path.join(BROWSER_PROFILES_DIR, "wu")
         os.makedirs(profile_dir, exist_ok=True)
@@ -856,8 +848,7 @@ class WesternUnionScraper(BaseScraper):
         return results
 
     async def close(self):
-        # Si playwright es None, el contexto es prestado del orquestador. NO cerrar.
+        if self.context:
+            await self.context.close()
         if self.playwright:
-            if self.context:
-                await self.context.close()
             await self.playwright.stop()
