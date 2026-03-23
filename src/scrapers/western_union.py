@@ -855,7 +855,8 @@ class WesternUnionScraper(BaseScraper):
         return results
 
     async def close(self):
-        if self.context:
-            await self.context.close()
+        # Si playwright es None, el contexto es prestado del orquestador. NO cerrar.
         if self.playwright:
+            if self.context:
+                await self.context.close()
             await self.playwright.stop()
