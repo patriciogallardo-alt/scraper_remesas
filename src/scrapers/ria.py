@@ -26,11 +26,12 @@ class RiaScraper(BaseScraper):
 
     def __init__(self):
         self.playwright = None
+        self.browser = None
         self.context = None
         self.page = None
 
     async def _init_browser(self):
-        """Inicia Playwright con perfil persistente."""
+        """Inicia Playwright con Chrome real del sistema (no test Chromium)."""
         import os
         profile_dir = os.path.join(BROWSER_PROFILES_DIR, "ria")
         os.makedirs(profile_dir, exist_ok=True)
@@ -43,7 +44,6 @@ class RiaScraper(BaseScraper):
             viewport={"width": 1280, "height": 800},
             locale="es-CL",
             timezone_id="America/Santiago",
-            args=["--no-sandbox"] if is_cloud else [],
         )
         self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
 
