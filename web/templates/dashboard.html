@@ -6,60 +6,95 @@
     <title>Scraper de Remesas — Dashboard</title>
     <meta name="description" content="Dashboard de comparación de remesas entre RIA, Western Union y AFEX">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
     <!-- HEADER -->
     <header class="header">
-        <h1>💱 Scraper de Remesas</h1>
-        <div class="header-actions">
-            <div class="meta-badge">
-                <span class="dot"></span>
-                <span id="meta-info">Cargando...</span>
+        <div class="header-brand">
+            <span class="header-logo">💱</span>
+            <div>
+                <h1>Scraper de Remesas</h1>
+                <div class="meta-badge">
+                    <span class="dot"></span>
+                    <span id="meta-info">Cargando...</span>
+                </div>
             </div>
-            <button class="btn btn-secondary" id="btn-download">📥 Descargar Excel</button>
-            <button class="btn btn-primary" id="btn-scrape">⚡ Ejecutar Scraping</button>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="btn-download">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Excel
+            </button>
+            <button class="btn btn-primary" id="btn-scrape">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Ejecutar Scraping
+            </button>
         </div>
     </header>
 
     <!-- MAIN -->
     <main class="main">
 
-        <!-- Stats -->
-        <section class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Cotizaciones</div>
-                <div class="stat-value accent" id="stat-total">0</div>
+        <!-- FILTER PANEL -->
+        <section class="filter-panel" id="filter-panel">
+            <div class="filter-panel-primary">
+                <div class="filter-group filter-group-lg">
+                    <label class="filter-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                        País Destino
+                    </label>
+                    <select class="filter-select filter-select-lg" id="filter-country"></select>
+                </div>
+                <span class="filter-divider"></span>
+                <div class="filter-group filter-group-lg">
+                    <label class="filter-label">Moneda Destino</label>
+                    <select class="filter-select filter-select-lg" id="filter-currency"></select>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Proveedores</div>
-                <div class="stat-value green" id="stat-agents">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Países</div>
-                <div class="stat-value orange" id="stat-countries">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Mejor Tasa</div>
-                <div class="stat-value" id="stat-best-rate">-</div>
+            <div class="filter-panel-secondary">
+                <div class="filter-group">
+                    <label class="filter-label">Proveedor</label>
+                    <select class="filter-select" id="filter-agent"></select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Cat. Recaudación</label>
+                    <select class="filter-select" id="filter-cat-recaudacion"></select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Cat. Dispersión</label>
+                    <select class="filter-select" id="filter-cat-dispersion"></select>
+                </div>
             </div>
         </section>
 
-        <!-- Filters -->
-        <section class="filters-bar">
-            <div class="filter-group">
-                <label class="filter-label">Proveedor</label>
-                <select class="filter-select" id="filter-agent"></select>
+        <!-- STATS (hidden until country filter) -->
+        <section class="stats-grid" id="stats-grid" style="display:none">
+            <div class="stat-card stat-card--green">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-content">
+                    <div class="stat-label">Mejor TC Final</div>
+                    <div class="stat-sublabel" id="stat-tc-sublabel">Moneda local</div>
+                    <div class="stat-value" id="stat-best-tc">-</div>
+                </div>
             </div>
-            <div class="filter-group">
-                <label class="filter-label">País Destino</label>
-                <select class="filter-select" id="filter-country"></select>
+            <div class="stat-card stat-card--blue" id="stat-card-usd" style="display:none">
+                <div class="stat-icon">💵</div>
+                <div class="stat-content">
+                    <div class="stat-label">Mejor TC Final USD</div>
+                    <div class="stat-sublabel">Dispersión en dólares</div>
+                    <div class="stat-value" id="stat-best-tc-usd">-</div>
+                </div>
             </div>
-            <div class="filter-group">
-                <label class="filter-label">Moneda Destino</label>
-                <select class="filter-select" id="filter-currency"></select>
+            <div class="stat-card stat-card--purple">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Cotizaciones</div>
+                    <div class="stat-sublabel">En el país seleccionado</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
             </div>
         </section>
 
@@ -69,19 +104,22 @@
                 <table>
                     <thead>
                         <tr>
-                            <th onclick="sortTable(0)">Timestamp <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(1)">Agente <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(2)">País Destino <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(3)">Mon. Origen <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(4)">Mon. Destino <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(5)">Enviado (CLP) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(6)">Recibido <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(7)">Tasa Cambio <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(8)">Fee Base <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(9)">Fee Impuesto <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(10)">Total Cobrado <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(11)">Mét. Recaudación <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(12)">Mét. Dispersión <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(0)">Agente <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(1)">País Destino <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(2)">Moneda Origen <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(3)">Moneda Destino <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(4)">Categoría Recaudación <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(5)">Categoría Dispersión <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(6)">Monto Enviado (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(7)">Monto Dispersado (ME) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(8)">Tasa de Cambio (Prov.) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(9)">TC Normalizado (CLP/ME) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(10)">Fee Base (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(11)">Fee Impuesto (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(12)">Total Cobrado (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(13)">Método Recaudación <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(14)">Método Dispersión <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(15)">Timestamp <span class="sort-arrow"></span></th>
                         </tr>
                     </thead>
                     <tbody id="table-body"></tbody>

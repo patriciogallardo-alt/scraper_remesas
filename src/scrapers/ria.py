@@ -12,7 +12,7 @@ from src.models import QuoteResult
 from src.config import (
     RIA_EMAIL, RIA_PASSWORD, SEND_AMOUNT_CLP,
     BROWSER_PROFILES_DIR, normalize_country, normalize_currency,
-    REQUEST_TIMEOUT
+    REQUEST_TIMEOUT, normalize_metodo_recaudacion, normalize_metodo_dispersion
 )
 
 logger = logging.getLogger(__name__)
@@ -134,6 +134,8 @@ class RiaScraper(BaseScraper):
             payload["selections"]["deliveryMethod"] = delivery_method
         if payment_method:
             payload["selections"]["paymentMethod"] = payment_method
+            # Importante: esta lista controla para qué métodos devuelve fee/tax detallado.
+            payload["selections"]["shouldCalcFeesForPaymentMethods"] = [payment_method]
 
         # Ejecutamos fetch en el contexto del navegador para heredar XSRF, headers reales y contexto origin()
         # Esto previene errores 500 causados por protecciones anti-bot de la API.
@@ -233,60 +235,64 @@ class RiaScraper(BaseScraper):
                 for currency in available_currencies:
                     for delivery in (available_delivery or [None]):
                         try:
-                            data = await self._calculate(
-                                code,
-                                currency_to=currency,
-                                delivery_method=delivery,
-                                payment_method=available_payment[0] if available_payment else None
-                            )
+                            # Iterar por todos los métodos de pago disponibles para capturar
+                            # combinaciones (incluyendo "Depósito con tarjeta de débito").
+                            for payment in (available_payment or [None]):
+                                data = await self._calculate(
+                                    code,
+                                    currency_to=currency,
+                                    delivery_method=delivery,
+                                    payment_method=payment,
+                                )
 
-                            model = data.get("model", {})
-                            td = model.get("transferDetails", {})
-                            calc = td.get("calculations", {})
-                            sel = td.get("selections", {})
+                                model = data.get("model", {})
+                                td = model.get("transferDetails", {})
+                                calc = td.get("calculations", {})
+                                sel = td.get("selections", {})
 
-                            # Extract fee details
-                            transfer_fee = float(calc.get("transferFee", 0) or 0)
-                            tax_amount = float(calc.get("taxAmount", 0) or 0)
-                            total_fees = float(calc.get("totalFeesAndTaxes", 0) or 0)
-                            total_amount = float(calc.get("totalAmount", 0) or 0)
-                            amount_to = float(calc.get("amountTo", 0) or 0)
-                            exchange_rate = float(calc.get("exchangeRate", 0) or 0)
+                                # Extract fee details
+                                transfer_fee = float(calc.get("transferFee", 0) or 0)
+                                tax_amount = float(calc.get("taxAmount", 0) or 0)
+                                total_amount = float(calc.get("totalAmount", 0) or 0)
+                                amount_to = float(calc.get("amountTo", 0) or 0)
+                                exchange_rate = float(calc.get("exchangeRate", 0) or 0)
 
-                            # Get delivery/payment method labels
-                            delivery_label = delivery or sel.get("deliveryMethod", "N/D")
-                            delivery_methods_map = {
-                                dm["value"]: dm.get("text", dm["value"])
-                                for dm in options.get("deliveryMethods", [])
-                            }
-                            delivery_label = delivery_methods_map.get(delivery_label, delivery_label)
+                                # Get delivery/payment method labels
+                                delivery_label = delivery or sel.get("deliveryMethod", "N/D")
+                                delivery_methods_map = {
+                                    dm["value"]: dm.get("text", dm["value"])
+                                    for dm in options.get("deliveryMethods", [])
+                                }
+                                delivery_label = delivery_methods_map.get(delivery_label, delivery_label)
 
-                            payment_label = sel.get("paymentMethod", "N/D")
-                            payment_methods_map = {
-                                pm["value"]: pm.get("text", pm["value"])
-                                for pm in options.get("paymentMethods", [])
-                            }
-                            payment_label = payment_methods_map.get(payment_label, payment_label)
+                                payment_label = payment or sel.get("paymentMethod", "N/D")
+                                payment_methods_map = {
+                                    pm["value"]: pm.get("text", pm["value"])
+                                    for pm in options.get("paymentMethods", [])
+                                }
+                                payment_label = payment_methods_map.get(payment_label, payment_label)
 
-                            dest_currency = normalize_currency(
-                                currency or sel.get("currencyTo", "")
-                            )
+                                dest_currency = normalize_currency(
+                                    currency or sel.get("currencyTo", "")
+                                )
 
-                            results.append(QuoteResult(
-                                timestamp=timestamp,
-                                agente="RIA",
-                                pais_destino=country_name,
-                                moneda_origen="CLP",
-                                moneda_destino=dest_currency,
-                                monto_enviado=float(SEND_AMOUNT_CLP),
-                                monto_recibido=amount_to,
-                                tasa_de_cambio=exchange_rate,
-                                fee_base=transfer_fee,
-                                fee_impuesto=tax_amount,
-                                total_cobrado=total_amount,
-                                metodo_recaudacion=payment_label,
-                                metodo_dispersion=delivery_label,
-                            ))
+                                results.append(QuoteResult(
+                                    timestamp=timestamp,
+                                    agente="RIA",
+                                    pais_destino=country_name,
+                                    moneda_origen="CLP",
+                                    moneda_destino=dest_currency,
+                                    monto_enviado=float(SEND_AMOUNT_CLP),
+                                    monto_recibido=amount_to,
+                                    tasa_de_cambio=exchange_rate,
+                                    fee_base=transfer_fee,
+                                    fee_impuesto=tax_amount,
+                                    total_cobrado=total_amount,
+                                    metodo_recaudacion=payment_label,
+                                    metodo_dispersion=delivery_label,
+                                    categoria_recaudacion=normalize_metodo_recaudacion(payment_label),
+                                    categoria_dispersion=normalize_metodo_dispersion(delivery_label),
+                                ))
 
                         except Exception as e:
                             logger.error(

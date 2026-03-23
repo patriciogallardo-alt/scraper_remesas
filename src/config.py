@@ -93,3 +93,149 @@ os.makedirs(BROWSER_PROFILES_DIR, exist_ok=True)
 REQUEST_TIMEOUT = 30  # segundos
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # segundos entre reintentos
+
+
+# --- Normalización de métodos de recaudación y dispersión ---
+# Mapea los valores crudos de cada proveedor a categorías universales.
+
+def normalize_metodo_recaudacion(raw: str) -> str:
+    """Normaliza método de recaudación a categoría universal."""
+    if not raw or raw == "N/D":
+        return "N/D"
+    r = raw.strip().lower()
+
+    # --- Efectivo (Pago en Persona / Sucursal) ---
+    # --- Efectivo (Pago en Persona / Sucursal) ---
+    if (
+        r in ("ca",)
+        or "presencial" in r
+        or "cash" in r
+        or "efectivo" in r
+        or "sucursal" in r
+        or "tienda" in r
+        or "agente" in r
+        or "ventanilla" in r
+        or "pago en punto" in r
+        or "paga en persona" in r
+        or "pago en persona" in r
+    ):
+        return "Efectivo"
+
+    # --- Tarjeta de Débito / Webpay ---
+    if (
+        r in ("dc", "webpay")
+        or "tarjeta de débito" in r
+        or "tarjeta débito" in r
+        or "debit card" in r
+        or "débito" in r
+        or "debito" in r
+        or "redcompra" in r
+        or ("visa" in r and ("debito" in r or "débito" in r))
+        or ("mastercard" in r and ("debito" in r or "débito" in r))
+    ):
+        return "Tarjeta de Débito"
+
+    # --- Tarjeta de Crédito ---
+    if (
+        r in ("cc",)
+        or "tarjeta de crédito" in r
+        or "credit card" in r
+        or "crédito" in r
+        or "credito" in r
+        or ("visa" in r and "debito" not in r and "débito" not in r)
+        or ("mastercard" in r and "debito" not in r and "débito" not in r)
+    ):
+        return "Tarjeta de Crédito"
+
+    # --- Pago Online (Portales) ---
+    if (
+        "sencillito" in r
+        or "servipag" in r
+        or "multicaja" in r
+    ):
+        return "Pago Online"
+
+    # --- Transferencia bancaria ---
+    # Códigos cortos + descripciones típicas en ES/EN.
+    if (
+        r in ("bb", "transferencia bancaria", "banco directo", "khipu")
+        or "transfer" in r
+        or "bank" in r
+        or "banco" in r
+        or "cuenta bancaria" in r
+        or "account" in r
+        or "cta" in r
+        or "deposito en cuenta" in r
+        or "depósito en cuenta" in r
+    ):
+        return "Transferencia Bancaria"
+
+    return raw  # fallback: valor original
+
+
+def normalize_metodo_dispersion(raw: str) -> str:
+    """Normaliza método de dispersión a categoría universal."""
+    if not raw or raw == "N/D":
+        return "N/D"
+    r = raw.strip().lower()
+
+    # --- Billetera digital (wallet / mobile) ---
+    if (
+        r.startswith("wallet")
+        or r.startswith("800")
+        or "mobile" in r
+        or "billetera" in r
+        or "moncash" in r
+        or "yape" in r
+        or "yapear" in r
+        or "yolo" in r
+        or "nequi" in r
+        or "plin" in r
+        or "send2wal" in r
+        or "wallet" in r
+        or "monedero" in r
+        or "cartera digital" in r
+        or "m-wallet" in r
+    ):
+        return "Billetera Digital"
+
+    # --- Retiro en efectivo ---
+    if (
+        r.startswith("000")
+        or "efectivo" in r
+        or "cash" in r
+        or "pickup" in r
+        or "retirar" in r
+        or "retiro" in r
+        or "agent" in r
+        or "agency" in r
+        or "agente" in r
+        or "money in minutes" in r
+        or "office" in r
+        or "branch" in r
+        or "sucursal" in r
+        or "recogida" in r
+        or "ventanilla" in r
+    ):
+        return "Retiro en Efectivo"
+
+    # --- Depósito bancario ---
+    if (
+        r.startswith("depósito")
+        or r.startswith("deposito")
+        or r.startswith("500")
+        or "bank" in r
+        or "banco" in r
+        or "cuenta" in r
+        or "account" in r
+        or "cta" in r
+        or "pix" in r
+        or "direct to bank" in r
+        or "bank account" in r
+        or "deposit to" in r
+        or "abono" in r
+        or "acreditar" in r
+    ):
+        return "Depósito Bancario"
+
+    return raw  # fallback: valor original

@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(python run_scraper.py --wu)",
+      "Bash(rm -rf browser_profiles/wu)",
+      "Bash(mkdir -p browser_profiles/wu)",
+      "Bash(python run_scraper.py --all)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python -c \"from flask import Flask; from openpyxl import Workbook; from dotenv import load_dotenv; print\\(''OK''\\)\")",
+      "Bash(python3:*)",
+      "Bash(python3 -c \":*)"
     ]
   }
 }

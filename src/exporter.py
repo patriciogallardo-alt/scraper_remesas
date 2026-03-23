@@ -62,11 +62,20 @@ def export_to_excel(scrape_run: ScrapeRun, filename: str = None) -> str:
             cell.alignment = Alignment(vertical="center")
 
             # Apply number formats
-            if col in (6, 9, 10, 11):  # CLP amounts
+            # Column mapping (1-based) — nuevo orden:
+            # 9: Monto Enviado (CLP)
+            # 10: Monto Dispersado (ME)
+            # 11: Tasa de Cambio (Proveedor)
+            # 12: TC Normalizado (CLP/Moneda Destino)
+            # 13: TC final
+            # 14: Fee Base (CLP)
+            # 15: Fee Impuesto (CLP)
+            # 16: Total Cobrado (CLP)
+            if col in (9, 14, 15, 16):  # CLP amounts
                 cell.number_format = number_format_clp
-            elif col == 7:  # Monto recibido
+            elif col == 10:  # Monto dispersado (moneda extranjera)
                 cell.number_format = number_format_amount
-            elif col == 8:  # Tasa de cambio
+            elif col in (11, 12, 13):  # Tasas de cambio
                 cell.number_format = number_format_rate
 
         # Alternate row colors
