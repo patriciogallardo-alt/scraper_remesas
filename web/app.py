@@ -5,6 +5,7 @@ import asyncio
 import os
 import logging
 import requests
+import threading
 from dotenv import load_dotenv
 from flask import Flask, render_template, jsonify, send_file
 from src.exporter import load_latest_run, export_to_excel, save_json
@@ -72,6 +73,50 @@ def save_to_supabase(results):
             logging.error(f"Respuesta Supabase: {e.response.text}")
         return False
 
+def fetch_latest_from_supabase():
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return None
+        
+    url = f"{SUPABASE_URL}/rest/v1/remittance_quotes"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        # 1. Traer el timestamp más reciente
+        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=1"
+        ts_resp = requests.get(ts_url, headers=headers, timeout=10)
+        if not ts_resp.ok or not ts_resp.json():
+            return None
+            
+        latest_ts = ts_resp.json()[0]["timestamp_scrape"]
+        
+        # 2. Traer todos los registros con ese timestamp
+        data_url = f"{url}?timestamp_scrape=eq.{latest_ts}"
+        data_resp = requests.get(data_url, headers=headers, timeout=15)
+        if not data_resp.ok:
+            return None
+            
+        results = data_resp.json()
+        
+        # Mapear 'timestamp_scrape' a 'timestamp' para compatibilidad con el frontend
+        for r in results:
+            r["timestamp"] = r.pop("timestamp_scrape", "")
+            
+        return {
+            "results": results,
+            "metadata": {
+                "timestamp": latest_ts,
+                "total_quotes": len(results),
+                "duration_seconds": "N/D (Nube)"
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error cargando de Supabase: {e}")
+        return None
+
 
 @app.route("/")
 def dashboard():
@@ -80,6 +125,12 @@ def dashboard():
 
 @app.route("/api/data")
 def get_data():
+    # Intentar obtener de Supabase primero para carga instantánea
+    supabase_data = fetch_latest_from_supabase()
+    if supabase_data and supabase_data["results"]:
+        return jsonify(supabase_data)
+
+    # Fallback al archivo local si falla
     run = load_latest_run()
     if not run:
         return jsonify({"results": [], "metadata": None})
@@ -110,14 +161,8 @@ def download_excel():
     )
 
 
-@app.route("/api/scrape", methods=["POST"])
-def trigger_scrape():
-    if scraping_status["running"]:
-        return jsonify({"status": "busy", "message": "Scraping ya en ejecución"}), 409
-
-    scraping_status["running"] = True
-    scraping_status["message"] = "Ejecutando scrapers..."
-
+def background_scrape():
+    global scraping_status
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -127,24 +172,32 @@ def trigger_scrape():
         if scrape_run.results:
             save_json(scrape_run)
             export_to_excel(scrape_run)
-            # Guardar en Supabase asíncronamente o en el mismo hilo
             save_to_supabase(scrape_run.results)
 
-        scraping_status["message"] = (
-            f"Completado: {scrape_run.total_quotes} cotizaciones "
-            f"en {scrape_run.duration_seconds}s"
-        )
-        return jsonify({
-            "status": "ok",
-            "total_quotes": scrape_run.total_quotes,
-            "duration": scrape_run.duration_seconds,
-            "errors": scrape_run.errors,
-        })
+        scraping_status["message"] = f"Completado exitosamente: {scrape_run.total_quotes} cotizaciones"
     except Exception as e:
         scraping_status["message"] = f"Error: {str(e)}"
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logging.error(f"Background scrape failed: {e}")
     finally:
         scraping_status["running"] = False
+
+
+@app.route("/api/scrape", methods=["POST"])
+def trigger_scrape():
+    if scraping_status["running"]:
+        return jsonify({"status": "busy", "message": "Scraping ya en ejecución"}), 409
+
+    scraping_status["running"] = True
+    scraping_status["message"] = "Ejecutando scrapers en segundo plano (aprox 4 minutos)..."
+
+    thread = threading.Thread(target=background_scrape)
+    thread.daemon = True
+    thread.start()
+
+    return jsonify({
+        "status": "started",
+        "message": "Scraping iniciado en segundo plano. Los datos aparecerán automáticamente en ~5 minutos tras recargar la página."
+    })
 
 
 @app.route("/api/status")

@@ -55,7 +55,9 @@ async function triggerScrape() {
         const resp = await fetch('/api/scrape', { method: 'POST' });
         const json = await resp.json();
 
-        if (json.status === 'ok') {
+        if (json.status === 'started') {
+            showToast(json.message || 'Scraping en proceso', 'success');
+        } else if (json.status === 'ok') {
             showToast(`${json.total_quotes} cotizaciones en ${json.duration}s`, 'success');
             await loadData();
         } else {
