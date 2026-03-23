@@ -152,7 +152,7 @@ function renderTable() {
         data.sort((a, b) => {
             const keys = ['agente', 'pais_destino', 'moneda_origen', 'moneda_destino',
                 'categoria_recaudacion', 'categoria_dispersion',
-                'monto_enviado', 'monto_recibido', 'tasa_de_cambio', 'tasa_cambio_normalizada',
+                'monto_enviado', 'monto_recibido', 'tasa_cambio_normalizada', 'tasa_cambio_final',
                 'fee_base', 'fee_impuesto', 'total_cobrado', 'metodo_recaudacion', 'metodo_dispersion', 'timestamp'];
             const key = keys[sortCol];
             let va = a[key], vb = b[key];
@@ -171,8 +171,8 @@ function renderTable() {
             <td><span class="cat-badge" data-tooltip="${getCatTooltip(r.categoria_dispersion)}">${r.categoria_dispersion || '-'}</span></td>
             <td class="num-clp">${fmt(r.monto_enviado)}</td>
             <td class="num-clp">${fmtDec(r.monto_recibido)}</td>
-            <td class="num-rate">${fmtRate(r.tasa_de_cambio)}</td>
             <td class="num-rate">${fmtRate(r.tasa_cambio_normalizada)}</td>
+            <td class="num-rate">${fmtRate(r.tasa_cambio_final)}</td>
             <td class="num-fee">${fmt(r.fee_base)}</td>
             <td class="num-fee">${fmt(r.fee_impuesto)}</td>
             <td class="num-total">${fmt(r.total_cobrado)}</td>
