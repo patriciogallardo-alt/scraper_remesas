@@ -219,10 +219,11 @@ class WesternUnionScraper(BaseScraper):
     async def _init_browser(self):
         """Inicia Playwright con Chrome real o reusa global."""
         if self.context:
-            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+            # SIEMPRE crear una página NUEVA para WU (la de RIA puede estar crasheada)
+            self.page = await self.context.new_page()
             await self.context.add_init_script(STEALTH_JS)
             await self.page.evaluate(STEALTH_JS)
-            logger.info("[WU] Reutilizando contexto compartido global. Aplicando evasión bot.")
+            logger.info("[WU] Reutilizando contexto compartido global con página nueva. Stealth aplicado.")
             return
 
         import os

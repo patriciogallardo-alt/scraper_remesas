@@ -70,16 +70,8 @@ async def run_all_scrapers(
                 "--no-first-run",
                 "--no-default-browser-check",
                 "--window-size=1280,800",
-            ]
+            ] + (["--no-sandbox"] if is_cloud else [])
         )
-
-        async def route_interceptor(route):
-            if route.request.resource_type in ["image", "stylesheet", "media", "font"]:
-                await route.abort()
-            else:
-                await route.continue_()
-
-        await shared_context.route("**/*", route_interceptor)
 
     scrapers = []
     if run_afex:
