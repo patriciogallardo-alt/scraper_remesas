@@ -236,13 +236,14 @@ class WesternUnionScraper(BaseScraper):
         # --enable-automation: agrega banner "Chrome is being controlled"
         # --no-sandbox: agrega banner "no-sandbox" que WU detecta
         # --enable-blink-features=IdleDetection: flag interno de Playwright
+        is_cloud = os.getenv("RENDER") == "true"
         ignored_default_args = [
             "--enable-automation",
-            "--no-sandbox",
             "--enable-blink-features=IdleDetection",
         ]
-
-        is_cloud = os.getenv("RENDER") == "true"
+        if not is_cloud:
+            # En local quitamos --no-sandbox para evadir anti-bots, en Linux/Docker es obligatorio
+            ignored_default_args.append("--no-sandbox")
         self.context = await self.playwright.chromium.launch_persistent_context(
             profile_dir,
             headless=is_cloud,
