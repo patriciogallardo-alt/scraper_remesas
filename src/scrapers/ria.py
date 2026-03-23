@@ -50,7 +50,7 @@ class RiaScraper(BaseScraper):
     async def _login(self):
         """Login en RIA. Si requiere 2FA, espera intervención manual."""
         logger.info("[RIA] Navegando al login...")
-        await self.page.goto(LOGIN_URL, wait_until="networkidle", timeout=60000)
+        await self.page.goto(LOGIN_URL, wait_until="domcontentloaded", timeout=60000)
         await asyncio.sleep(2)
 
         # Check if already logged in (look for calculator or dashboard elements)
@@ -187,7 +187,7 @@ class RiaScraper(BaseScraper):
         try:
             await self.page.goto(
                 "https://secure.riamoneytransfer.com/send/moneytransfer",
-                wait_until="networkidle", timeout=30000
+                wait_until="domcontentloaded", timeout=30000
             )
             await asyncio.sleep(2)
         except Exception:
