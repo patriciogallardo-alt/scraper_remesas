@@ -50,8 +50,11 @@ async def run_all_scrapers(
             logger.info(f"=== Ejecutando scraper {name} ===")
             results = await scraper.scrape(DESTINATIONS)
             
-            # Inject market rates and calculate markup
+            # Inject market rates, uniform timestamp and calculate markup
             for r in results:
+                # Unificar timestamp para agrupar todas las remesadoras bajo una sola consulta
+                r.timestamp = scrape_run.timestamp
+                
                 if r.moneda_destino in market_rates:
                     # La API da: 1 CLP = X Moneda Destino. 
                     # Nuestra tasa es: CLP / 1 Moneda Destino, así que invertimos
