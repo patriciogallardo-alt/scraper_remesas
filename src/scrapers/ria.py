@@ -37,21 +37,12 @@ class RiaScraper(BaseScraper):
 
         self.playwright = await async_playwright().start()
         is_cloud = os.getenv("RENDER") == "true"
-
-        ignored_default_args = [
-            "--enable-automation",
-            "--enable-blink-features=IdleDetection",
-        ]
-        if not is_cloud:
-            ignored_default_args.append("--no-sandbox")
-
         self.context = await self.playwright.chromium.launch_persistent_context(
             profile_dir,
             headless=is_cloud,
             viewport={"width": 1280, "height": 800},
             locale="es-CL",
             timezone_id="America/Santiago",
-            ignore_default_args=ignored_default_args,
             args=["--no-sandbox"] if is_cloud else [],
         )
         self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
