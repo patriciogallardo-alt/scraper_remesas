@@ -120,6 +120,48 @@ def fetch_latest_from_supabase():
         logging.error(f"Error cargando de Supabase: {e}")
         return None
 
+def fetch_range_from_supabase(days):
+    """Fetch all records within the last N days from Supabase."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return None
+    if not days or int(days) <= 0:
+        return fetch_latest_from_supabase()
+        
+    url = f"{SUPABASE_URL}/rest/v1/remittance_quotes"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    threshold_date = (datetime.utcnow() - timedelta(days=int(days))).isoformat()
+    
+    try:
+        data_url = f"{url}?timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.desc"
+        data_resp = requests.get(data_url, headers=headers, timeout=15)
+        if not data_resp.ok:
+            return None
+            
+        results = data_resp.json()
+        
+        # Mapear 'timestamp_scrape' a 'timestamp'
+        for r in results:
+            r["timestamp"] = r.pop("timestamp_scrape", "")
+            
+        latest_ts = results[0]["timestamp"] if results else None
+            
+        return {
+            "results": results,
+            "metadata": {
+                "timestamp": latest_ts,
+                "total_quotes": len(results),
+                "duration_seconds": f"Últimos {days} días"
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error cargando rango de Supabase: {e}")
+        return None
+
 def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, cat_disp=None, agents=None):
     if not SUPABASE_URL or not SUPABASE_KEY:
         return []
@@ -167,8 +209,13 @@ def dashboard():
 
 @app.route("/api/data")
 def get_data():
-    # Intentar obtener de Supabase primero para carga instantánea
-    supabase_data = fetch_latest_from_supabase()
+    days = request.args.get('days', 0, type=int)
+    
+    if days > 0:
+        supabase_data = fetch_range_from_supabase(days)
+    else:
+        supabase_data = fetch_latest_from_supabase()
+
     if supabase_data and supabase_data["results"]:
         return jsonify(supabase_data)
 

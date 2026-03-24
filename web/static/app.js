@@ -186,7 +186,9 @@ function onCountryChange() {
 // ===== API Calls =====
 async function loadData() {
     try {
-        const resp = await fetch('/api/data');
+        const days = document.getElementById('filter-days')?.value || 0;
+        const url = days > 0 ? `/api/data?days=${days}` : '/api/data';
+        const resp = await fetch(url);
         const json = await resp.json();
         allData = json.results || [];
         updateMeta(json.metadata);
