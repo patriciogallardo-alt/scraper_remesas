@@ -643,12 +643,11 @@ document.addEventListener('click', (e) => {
     }
 });
 
-window.toggleAllMs = function(id) {
+window.resetMs = function(id) {
     const container = document.getElementById(`dropdown-${id}`);
     if (!container) return;
     const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-    checkboxes.forEach(cb => cb.checked = !allChecked);
+    checkboxes.forEach(cb => cb.checked = false);
     updateMsText(id);
 }
 
@@ -657,10 +656,10 @@ window.updateMsText = function(id, trigger = true) {
     if (!container) return;
     const checkboxes = container.querySelectorAll('input[type="checkbox"]');
     const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
-    const total = checkboxes.length;
+    
     const btn = document.querySelector(`#ms-${id} .ms-text`);
     
-    if (checked === 0 || (total > 0 && checked === total)) {
+    if (checked === 0) {
         btn.innerText = 'Todos';
     } else {
         btn.innerText = `${checked} seleccionado${checked>1?'s':''}`;
@@ -678,7 +677,7 @@ function populateMultiFilter(containerId, dataList) {
     const container = document.getElementById(`dropdown-${containerId}`);
     if (!container) return;
     const options = [...new Set(dataList.filter(v => v !== '-' && v !== '' && v !== 'N/D' && v != null))].sort();
-    let html = `<div class="ms-header" onclick="toggleAllMs('${containerId}')">Seleccionar / Deseleccionar Todo</div>`;
+    let html = `<div class="ms-header" onclick="resetMs('${containerId}')">Restablecer Filtro (Ver Todo)</div>`;
     options.forEach(opt => {
         html += `<label class="ms-option"><input type="checkbox" value="${opt}" onchange="updateMsText('${containerId}')"> ${opt}</label>`;
     });
