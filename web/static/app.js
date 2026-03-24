@@ -475,8 +475,8 @@ function updateStats(data, countryFilter) {
         dom.innerHTML = valHtml;
     }
 
-    renderDiff(domDiffTc, afexTc.tasa_cambio_final, bestTc.tasa_cambio_final, `CLP`, bestTc.agente);
-    renderDiff(domDiffNorm, afexNorm.tasa_cambio_normalizada, bestNorm.tasa_cambio_normalizada, `CLP`, bestNorm.agente);
+    renderDiff(domDiffTc, afexTc.tasa_cambio_final, bestTc.tasa_cambio_final, `CLP/${targetCurrency}`, bestTc.agente);
+    renderDiff(domDiffNorm, afexNorm.tasa_cambio_normalizada, bestNorm.tasa_cambio_normalizada, `CLP/${targetCurrency}`, bestNorm.agente);
     
     // Fee Diff (Zero decimals)
     const feeAfex = getFee(afexFee);
