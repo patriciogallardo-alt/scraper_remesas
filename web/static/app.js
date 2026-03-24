@@ -38,6 +38,7 @@ let historyChartInstance = null;
 async function fetchHistory() {
     const country = document.getElementById('filter-country').value;
     const days = document.getElementById('filter-history-days').value;
+    const currency = document.getElementById('filter-currency').value;
     const agent = getMsValues('agent').map(v => encodeURIComponent(v)).join(',');
     const catRec = getMsValues('cat-rec').map(v => encodeURIComponent(v)).join(',');
     const catDisp = getMsValues('cat-disp').map(v => encodeURIComponent(v)).join(',');
