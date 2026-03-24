@@ -781,17 +781,25 @@ tr:hover td {
     position: absolute; 
     top: calc(100% + 6px); 
     left: 0; 
-    width: 100%;
+    min-width: 100%;
+    width: auto;
     background-color: #1a1f35; /* Matches .filter-select-lg option bg */
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm); 
-    box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.7);
     z-index: 2000; 
-    max-height: 250px; 
-    overflow-y: auto; 
+    max-height: 300px; 
+    overflow-y: auto;
+    overflow-x: hidden;
     display: none; 
     flex-direction: column;
-    padding: 4px 0;
+    padding: 6px 0;
+}
+
+/* Ensure the rightmost dropdown doesn't overflow to the right */
+#ms-cat-disp .ms-dropdown {
+    left: auto;
+    right: 0;
 }
 
 .ms-dropdown.show { display: flex; }
@@ -799,14 +807,15 @@ tr:hover td {
 .ms-option {
     display: flex; 
     align-items: center; 
-    gap: 10px; 
-    padding: 8px 12px; 
+    gap: 12px; 
+    padding: 10px 16px; 
     margin: 0;
     cursor: pointer; 
     transition: background 0.2s; 
     font-size: 0.8rem; 
     user-select: none;
     color: var(--text-primary);
+    white-space: nowrap; /* CRITICAL: Prevent wrapping */
 }
 
 .ms-option:hover { 
