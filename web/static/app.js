@@ -24,6 +24,11 @@ function switchTab(tabId) {
     const tab = document.getElementById('tab-' + tabId);
     if (tab) tab.style.display = 'block';
 
+    const groupAgent = document.getElementById('group-filter-agent');
+    if (groupAgent) {
+        groupAgent.style.display = tabId === 'history' ? 'none' : 'flex';
+    }
+
     if (tabId === 'history') {
         fetchHistory();
     }
@@ -53,7 +58,7 @@ async function fetchHistory() {
         if (currency) url += `&currency=${encodeURIComponent(currency)}`;
         if (catRec) url += `&catRec=${catRec}`;
         if (catDisp) url += `&catDisp=${catDisp}`;
-        if (agent) url += `&agent=${agent}`;
+        // Note: Agent filter is ignored for History per user request (legend is the filter)
         
         const res = await fetch(url);
         if (!res.ok) throw new Error("Fallo la red o Supabase");
@@ -129,24 +134,7 @@ function renderHistoryChart(data) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { 
-                    position: 'top',
-                    onClick: (e, legendItem, legend) => {
-                        const label = legendItem.text;
-                        const cb = document.querySelector(`#dropdown-agent input[value="${label}"]`);
-                        if (cb) {
-                            cb.checked = !cb.checked;
-                            updateMsText('agent'); // This triggers renderTable -> fetchHistory
-                        } else {
-                            // Default action if no checkbox found
-                            const index = legendItem.datasetIndex;
-                            const ci = legend.chart;
-                            const meta = ci.getDatasetMeta(index);
-                            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
-                            ci.update();
-                        }
-                    }
-                },
+                legend: { position: 'top' },
                 tooltip: { 
                     callbacks: {
                         label: function(context) {
