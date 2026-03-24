@@ -6,3 +6,4 @@ python-dotenv
 gunicorn
 apscheduler
 pytz
+tzdata
