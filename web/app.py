@@ -201,13 +201,14 @@ def download_excel():
     )
 
 
-def background_scrape():
+def background_scrape(is_manual=False):
     global scraping_status
-    if scraping_status.get("running", False):
-        logging.info("Scraping ya en ejecución, saltando tarea programada.")
-        return
+    if not is_manual:
+        if scraping_status.get("running", False):
+            logging.info("Scraping ya en ejecución, saltando tarea programada.")
+            return
+        scraping_status["running"] = True
         
-    scraping_status["running"] = True
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -269,7 +270,7 @@ def trigger_scrape():
     scraping_status["running"] = True
     scraping_status["message"] = "Ejecutando scrapers en segundo plano (aprox 4 minutos)..."
 
-    thread = threading.Thread(target=background_scrape)
+    thread = threading.Thread(target=background_scrape, args=(True,))
     thread.daemon = True
     thread.start()
 
