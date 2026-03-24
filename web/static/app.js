@@ -78,7 +78,7 @@ function renderHistoryChart(data) {
     if (historyChartInstance) { historyChartInstance.destroy(); }
     
     if (!data || data.length === 0) {
-        // Nada que graficar
+        if (historyChartInstance) { historyChartInstance.destroy(); historyChartInstance = null; }
         return;
     }
     
@@ -643,6 +643,13 @@ document.addEventListener('click', (e) => {
     }
 });
 
+window.resetMs = function(id) {
+    const container = document.getElementById(`dropdown-${id}`);
+    if (!container) return;
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    updateMsText(id);
+}
+
 window.updateMsText = function(id, trigger = true) {
     const container = document.getElementById(`dropdown-${id}`);
     if (!container) return;
@@ -666,7 +673,7 @@ function populateMultiFilter(containerId, dataList) {
     const container = document.getElementById(`dropdown-${containerId}`);
     if (!container) return;
     const options = [...new Set(dataList.filter(v => v !== '-' && v !== '' && v !== 'N/D' && v != null))].sort();
-    let html = '';
+    let html = `<div class="ms-header" onclick="resetMs('${containerId}')">Seleccionar Todos (Ver Todo)</div>`;
     options.forEach(opt => {
         html += `<label class="ms-option"><input type="checkbox" value="${opt}" onchange="updateMsText('${containerId}')"> ${opt}</label>`;
     });
