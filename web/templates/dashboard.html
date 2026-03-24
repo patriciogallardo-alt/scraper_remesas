@@ -70,31 +70,64 @@
             </div>
         </section>
 
-        <!-- STATS (hidden until country filter) -->
-        <section class="stats-grid" id="stats-grid" style="display:none">
-            <div class="stat-card stat-card--green">
-                <div class="stat-icon">🏆</div>
-                <div class="stat-content">
-                    <div class="stat-label">Mejor TC Final</div>
-                    <div class="stat-sublabel" id="stat-tc-sublabel">Moneda local</div>
-                    <div class="stat-value" id="stat-best-tc">-</div>
-                </div>
+        <!-- COMPETITIVE STATS (hidden until country filter) -->
+        <section class="competitive-grid" id="stats-grid" style="display:none">
+            <!-- Row 1: Global Bests -->
+            <div class="comp-card" id="cc-best-tc">
+                <div class="comp-label">Mejor TC Final 🌍</div>
+                <div class="comp-value" id="val-best-tc">-</div>
+                <div class="comp-sub" id="sub-best-tc">Seleccione país</div>
             </div>
-            <div class="stat-card stat-card--blue" id="stat-card-usd" style="display:none">
-                <div class="stat-icon">💵</div>
-                <div class="stat-content">
-                    <div class="stat-label">Mejor TC Final USD</div>
-                    <div class="stat-sublabel">Dispersión en dólares</div>
-                    <div class="stat-value" id="stat-best-tc-usd">-</div>
-                </div>
+            <div class="comp-card" id="cc-best-norm">
+                <div class="comp-label">Mejor TC Normalizado 🌍</div>
+                <div class="comp-value" id="val-best-norm">-</div>
+                <div class="comp-sub" id="sub-best-norm">Seleccione país</div>
             </div>
-            <div class="stat-card stat-card--purple">
-                <div class="stat-icon">📊</div>
-                <div class="stat-content">
-                    <div class="stat-label">Total Cotizaciones</div>
-                    <div class="stat-sublabel">En el país seleccionado</div>
-                    <div class="stat-value" id="stat-total">0</div>
-                </div>
+            <div class="comp-card" id="cc-best-fee">
+                <div class="comp-label">Menor Fee Base 🌍</div>
+                <div class="comp-value" id="val-best-fee">-</div>
+                <div class="comp-sub" id="sub-best-fee">Seleccione país</div>
+            </div>
+            
+            <!-- Spanning column for Total Quotes -->
+            <div class="comp-card comp-card--span3" id="cc-total-quotes">
+                <div class="comp-label">Total Cotizaciones</div>
+                <div class="comp-value val-large" id="val-total-quotes">0</div>
+                <div class="comp-sub">Para los filtros seleccionados</div>
+            </div>
+
+            <!-- Row 2: AFEX Bests -->
+            <div class="comp-card comp-card--afex" id="cc-afex-tc">
+                <div class="comp-label">Mejor TC Final AFEX</div>
+                <div class="comp-value" id="val-afex-tc">-</div>
+                <div class="comp-sub" id="sub-afex-tc"></div>
+            </div>
+            <div class="comp-card comp-card--afex" id="cc-afex-norm">
+                <div class="comp-label">Mejor TC Normalizado AFEX</div>
+                <div class="comp-value" id="val-afex-norm">-</div>
+                <div class="comp-sub" id="sub-afex-norm"></div>
+            </div>
+            <div class="comp-card comp-card--afex" id="cc-afex-fee">
+                <div class="comp-label">Menor Fee Base AFEX</div>
+                <div class="comp-value" id="val-afex-fee">-</div>
+                <div class="comp-sub" id="sub-afex-fee"></div>
+            </div>
+
+            <!-- Row 3: Differences -->
+            <div class="comp-card comp-card--diff" id="cc-diff-tc">
+                <div class="comp-label">Brecha TC Final</div>
+                <div class="comp-value" id="val-diff-tc">-</div>
+                <div class="comp-sub">AFEX vs Mejor Mercado</div>
+            </div>
+            <div class="comp-card comp-card--diff" id="cc-diff-norm">
+                <div class="comp-label">Brecha TC Normalizado</div>
+                <div class="comp-value" id="val-diff-norm">-</div>
+                <div class="comp-sub">AFEX vs Mejor Mercado</div>
+            </div>
+            <div class="comp-card comp-card--diff" id="cc-diff-fee">
+                <div class="comp-label">Brecha Fee Base</div>
+                <div class="comp-value" id="val-diff-fee">-</div>
+                <div class="comp-sub">AFEX vs Mejor Mercado</div>
             </div>
         </section>
 

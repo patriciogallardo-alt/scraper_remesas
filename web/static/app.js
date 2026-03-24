@@ -200,52 +200,101 @@ function sortTable(colIndex) {
     renderTable();
 }
 
-// ===== Stats =====
+// ===== Competitive Stats =====
 function updateStats(data, countryFilter) {
-    const domTotal = document.getElementById('stat-total');
-    const domBestTC = document.getElementById('stat-best-tc');
-    const domBestTCUSD = document.getElementById('stat-best-tc-usd');
-    const domTCSublabel = document.getElementById('stat-tc-sublabel');
-    const cardUSD = document.getElementById('stat-card-usd');
-
+    const domTotal = document.getElementById('val-total-quotes');
     domTotal.textContent = data.length;
 
+    const ids = [
+        'val-best-tc', 'val-best-norm', 'val-best-fee',
+        'sub-best-tc', 'sub-best-norm', 'sub-best-fee',
+        'val-afex-tc', 'val-afex-norm', 'val-afex-fee',
+        'sub-afex-tc', 'sub-afex-norm', 'sub-afex-fee',
+        'val-diff-tc', 'val-diff-norm', 'val-diff-fee'
+    ];
+
     if (!data.length) {
-        domBestTC.innerHTML = '-';
-        domBestTCUSD.innerHTML = '-';
-        cardUSD.style.display = 'none';
-        domTCSublabel.textContent = 'Moneda local';
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = id.startsWith('sub-') ? 'Sin datos' : '-';
+        });
         return;
     }
 
-    // Get all non-USD currencies for this country (i.e. local currencies)
-    const localQuotes = data.filter(r => r.moneda_destino !== 'USD' && r.tasa_cambio_final > 0);
-    const usdQuotes = data.filter(r => r.moneda_destino === 'USD' && r.tasa_cambio_final > 0);
+    // Identificar moneda destino principal para comparar
+    // Si hay USD, no mezclarlos con PE etc, preferimos filtrar todos a la misma moneda
+    // Tomamos la moneda destino del primer registro que no sea USD, o la que haya.
+    let targetCurrency = 'USD';
+    const nonUsd = data.filter(r => r.moneda_destino !== 'USD');
+    if (nonUsd.length > 0) targetCurrency = nonUsd[0].moneda_destino;
+    
+    // Filtramos para asegurar que comparamos la misma moneda (peras con peras)
+    const validData = data.filter(r => r.moneda_destino === targetCurrency);
 
-    // Mejor TC Final - Local currency (lowest tasa_cambio_final = best for the sender)
-    if (localQuotes.length > 0) {
-        const bestLocal = localQuotes.reduce((prev, curr) =>
-            curr.tasa_cambio_final < prev.tasa_cambio_final ? curr : prev
-        );
-        const localCurrency = bestLocal.moneda_destino;
-        domTCSublabel.textContent = `Dispersión en ${localCurrency}`;
-        domBestTC.innerHTML = `<strong>${bestLocal.agente}</strong><br><span style="font-size:0.8rem;color:var(--accent-green)">${fmtRate(bestLocal.tasa_cambio_final)} CLP/${localCurrency}</span>`;
-    } else {
-        domTCSublabel.textContent = 'Moneda local';
-        domBestTC.innerHTML = '<span style="color:var(--text-muted)">Sin datos</span>';
+    if (!validData.length) return;
+
+    // Helper para formatear
+    const fRate = (v, c) => `${fmtRate(v)} CLP/${c}`;
+    const fFee = (v) => `${fmt(v)} CLP`;
+
+    // 1. Global Bests
+    const bestTc = validData.filter(r => r.tasa_cambio_final > 0).reduce((prev, curr) => curr.tasa_cambio_final < prev.tasa_cambio_final ? curr : prev, {tasa_cambio_final: Infinity});
+    const bestNorm = validData.filter(r => r.tasa_cambio_normalizada > 0).reduce((prev, curr) => curr.tasa_cambio_normalizada < prev.tasa_cambio_normalizada ? curr : prev, {tasa_cambio_normalizada: Infinity});
+    const bestFee = validData.filter(r => r.fee_base >= 0).reduce((prev, curr) => curr.fee_base < prev.fee_base ? curr : prev, {fee_base: Infinity});
+
+    // 2. AFEX Bests
+    const afexData = validData.filter(r => r.agente.toUpperCase() === 'AFEX' || r.agente.toUpperCase().includes('AFEX'));
+    
+    const afexTc = afexData.filter(r => r.tasa_cambio_final > 0).reduce((prev, curr) => curr.tasa_cambio_final < prev.tasa_cambio_final ? curr : prev, {tasa_cambio_final: Infinity});
+    const afexNorm = afexData.filter(r => r.tasa_cambio_normalizada > 0).reduce((prev, curr) => curr.tasa_cambio_normalizada < prev.tasa_cambio_normalizada ? curr : prev, {tasa_cambio_normalizada: Infinity});
+    const afexFee = afexData.filter(r => r.fee_base >= 0).reduce((prev, curr) => curr.fee_base < prev.fee_base ? curr : prev, {fee_base: Infinity});
+
+    // Populate Global Bests
+    document.getElementById('val-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? fRate(bestTc.tasa_cambio_final, targetCurrency) : '-';
+    document.getElementById('sub-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? `Ofrecido por <strong>${bestTc.agente}</strong>` : '';
+
+    document.getElementById('val-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? fRate(bestNorm.tasa_cambio_normalizada, targetCurrency) : '-';
+    document.getElementById('sub-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? `Ofrecido por <strong>${bestNorm.agente}</strong>` : '';
+
+    document.getElementById('val-best-fee').innerHTML = bestFee.fee_base !== Infinity ? fFee(bestFee.fee_base) : '-';
+    document.getElementById('sub-best-fee').innerHTML = bestFee.fee_base !== Infinity ? `Ofrecido por <strong>${bestFee.agente}</strong>` : '';
+
+    // Populate AFEX Bests
+    document.getElementById('val-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? fRate(afexTc.tasa_cambio_final, targetCurrency) : '<span style="color:#aaa">N/A</span>';
+    document.getElementById('sub-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? `(${afexTc.metodo_recaudacion})` : '';
+
+    document.getElementById('val-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? fRate(afexNorm.tasa_cambio_normalizada, targetCurrency) : '<span style="color:#aaa">N/A</span>';
+    document.getElementById('sub-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? `(${afexNorm.metodo_recaudacion})` : '';
+
+    document.getElementById('val-afex-fee').innerHTML = afexFee.fee_base !== Infinity ? fFee(afexFee.fee_base) : '<span style="color:#aaa">N/A</span>';
+    document.getElementById('sub-afex-fee').innerHTML = afexFee.fee_base !== Infinity ? `(${afexFee.metodo_recaudacion})` : '';
+
+    // Calculate Differences
+    const domDiffTc = document.getElementById('val-diff-tc');
+    const domDiffNorm = document.getElementById('val-diff-norm');
+    const domDiffFee = document.getElementById('val-diff-fee');
+
+    function renderDiff(dom, afexVal, globalVal, suffix) {
+        if (afexVal === Infinity || globalVal === Infinity) {
+            dom.innerHTML = '<span class="val-neutral">-</span>';
+            return;
+        }
+        const diff = afexVal - globalVal;
+        
+        if (diff < 0.001 && diff > -0.001 && afexVal === globalVal) {
+            dom.innerHTML = '<span class="val-negative">🏆 Somos los mejores</span>';
+        } else if (diff > 0) {
+            // AFEX es más caro (peor)
+            dom.innerHTML = `<span class="val-positive">+ ${fmtRate(Math.abs(diff))} ${suffix}</span>`;
+        } else {
+            // AFEX es más barato (mejor)
+            dom.innerHTML = `<span class="val-negative">- ${fmtRate(Math.abs(diff))} ${suffix}</span>`;
+        }
     }
 
-    // Mejor TC Final - USD (conditional: only show if USD quotes exist for this country)
-    if (usdQuotes.length > 0) {
-        const bestUSD = usdQuotes.reduce((prev, curr) =>
-            curr.tasa_cambio_final < prev.tasa_cambio_final ? curr : prev
-        );
-        cardUSD.style.display = '';
-        domBestTCUSD.innerHTML = `<strong>${bestUSD.agente}</strong><br><span style="font-size:0.8rem;color:var(--accent-blue-light)">${fmtRate(bestUSD.tasa_cambio_final)} CLP/USD</span>`;
-    } else {
-        cardUSD.style.display = 'none';
-        domBestTCUSD.innerHTML = '-';
-    }
+    renderDiff(domDiffTc, afexTc.tasa_cambio_final, bestTc.tasa_cambio_final, `CLP/${targetCurrency}`);
+    renderDiff(domDiffNorm, afexNorm.tasa_cambio_normalizada, bestNorm.tasa_cambio_normalizada, `CLP/${targetCurrency}`);
+    renderDiff(domDiffFee, afexFee.fee_base, bestFee.fee_base, 'CLP');
 }
 
 function updateMeta(meta) {
