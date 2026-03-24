@@ -37,7 +37,7 @@ function switchTab(tabId) {
 let historyChartInstance = null;
 async function fetchHistory() {
     const country = document.getElementById('filter-country').value;
-    const days = document.getElementById('filter-history-days').value;
+    const days = document.getElementById('filter-days')?.value || 7;
     const currency = document.getElementById('filter-currency').value;
     const agent = getMsValues('agent').map(v => encodeURIComponent(v)).join(',');
     const catRec = getMsValues('cat-rec').map(v => encodeURIComponent(v)).join(',');
@@ -497,7 +497,9 @@ function updateStats(data, countryFilter) {
         // Positive if AFEX is more expensive (worse), negative if AFEX is cheaper (better)
         const signStr = d > 0 ? '+ ' : (d < 0 ? '- ' : '');
         const cClass = d === 0 ? 'val-neutral' : (d < 0 ? 'val-negative' : 'val-positive');
-        domDiffFee.innerHTML = `<span class="${cClass}">${signStr}${fmt(Math.abs(d))} CLP</span><div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">vs ${bestFee.agente}</div>`;
+        domDiffFee.innerHTML = `<span class="${cClass}">${signStr}${fmt(Math.abs(d))} CLP</span>`;
+        const subLabel = domDiffFee.nextElementSibling;
+        if (subLabel) subLabel.innerText = `AFEX vs ${bestFee.agente}`;
     }
 }
 

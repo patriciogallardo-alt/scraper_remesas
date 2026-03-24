@@ -67,7 +67,7 @@
                         Período
                     </label>
                     <select class="filter-select" id="filter-days" onchange="loadData()">
-                        <option value="0">Último Scrape</option>
+                        <option value="0">Data más reciente</option>
                         <option value="1">Últimas 24h</option>
                         <option value="3">Últimos 3 días</option>
                         <option value="7">Últimos 7 días</option>
@@ -139,7 +139,7 @@
                 <div class="comp-card" id="cc-best-tc">
                     <div class="comp-label">
                         Mejor TC Final Global
-                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="(Monto Enviado + Fee Total) / Monto Recibido">
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="(Monto Enviado + Tarifa) / Monto Recibido">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </span>
                     </div>
@@ -149,7 +149,7 @@
                 <div class="comp-card" id="cc-best-norm">
                     <div class="comp-label">
                         Mejor TC Normalizado Global
-                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Tasa de cambio pura ofrecida por el proveedor, sin considerar fees">
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Monto Enviado / Monto Recibido">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </span>
                     </div>
@@ -158,8 +158,8 @@
                 </div>
                 <div class="comp-card" id="cc-best-fee">
                     <div class="comp-label">
-                        Menor Fee Final Global
-                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">
+                        Menor Tarifa Final Global
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Costo Total Fijo de envío (Tarifa Base + Tarifa Impuesto)">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </span>
                     </div>
@@ -178,7 +178,7 @@
                 <div class="comp-card comp-card--afex" id="cc-afex-tc">
                     <div class="comp-label">
                         Mejor TC Final AFEX
-                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="(Monto Enviado + Fee Total) / Monto Recibido">
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="(Monto Enviado + Tarifa) / Monto Recibido">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </span>
                     </div>
@@ -188,7 +188,7 @@
                 <div class="comp-card comp-card--afex" id="cc-afex-norm">
                     <div class="comp-label">
                         Mejor TC Normalizado AFEX
-                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Tasa de cambio pura ofrecida por AFEX, sin considerar fees">
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Monto Enviado / Monto Recibido">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </span>
                     </div>
@@ -197,8 +197,8 @@
                 </div>
                 <div class="comp-card comp-card--afex" id="cc-afex-fee">
                     <div class="comp-label">
-                        Menor Fee Final AFEX
-                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">
+                        Menor Tarifa Final AFEX
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Costo Total Fijo de envío (Tarifa Base + Tarifa Impuesto)">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </span>
                     </div>
@@ -218,7 +218,7 @@
                     <div class="comp-sub">AFEX vs Mejor Mercado</div>
                 </div>
                 <div class="comp-card comp-card--diff" id="cc-diff-fee">
-                    <div class="comp-label">Brecha Fee Final</div>
+                    <div class="comp-label">Brecha Tarifa Final</div>
                     <div class="comp-value" id="val-diff-fee">-</div>
                     <div class="comp-sub">AFEX vs Mejor Mercado</div>
                 </div>
@@ -227,21 +227,6 @@
 
         <!-- TAB 2: HISTORICAL TRENDS -->
         <div id="tab-history" class="tab-content" style="display:none">
-            <div class="filter-panel" style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <h2 style="font-size: 1.25rem; color: var(--text-dark);">Tendencia del Mercado</h2>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top:0.2rem">Evolución histórica del TC Final por proveedor.</p>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Período Histórico</label>
-                    <select class="filter-select" id="filter-history-days" onchange="fetchHistory()">
-                        <option value="7">Últimos 7 días</option>
-                        <option value="15">Últimos 15 días</option>
-                        <option value="30">Últimos 30 días</option>
-                    </select>
-                </div>
-            </div>
-            
             <div class="comp-card" id="history-container" style="height: 400px; padding:20px; position:relative;">
                 <canvas id="historyChart"></canvas>
                 <div id="history-empty" class="empty-state" style="position:absolute; top:0; left:0; right:0; bottom:0; padding-top:60px;">
@@ -276,9 +261,9 @@
                             <th onclick="sortTable(6)">Monto Enviado (CLP) <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(7)">Monto Dispersado (ME) <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(8)">TC Normalizado (CLP/ME) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(9)">TC Final (Con Fees) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(10)">Fee Base (CLP) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(11)">Fee Impuesto (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(9)">TC Final (Con Tarifas) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(10)">Tarifa Base (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(11)">Tarifa Impuesto (CLP) <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(12)">Total Cobrado (CLP) <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(13)">Método Recaudación <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(14)">Método Dispersión <span class="sort-arrow"></span></th>
