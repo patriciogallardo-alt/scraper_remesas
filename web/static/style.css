@@ -503,12 +503,15 @@ tr:hover td {
     background: rgba(99, 102, 241, 0.08);
     color: var(--accent-blue-light);
     border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+[data-tooltip] {
     position: relative;
     cursor: help;
 }
 
 /* Tooltip implementation */
-.cat-badge::after {
+[data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
     bottom: 120%;
@@ -533,7 +536,7 @@ tr:hover td {
     pointer-events: none;
 }
 
-.cat-badge::before {
+[data-tooltip]::before {
     content: '';
     position: absolute;
     bottom: 120%;
@@ -550,8 +553,8 @@ tr:hover td {
     pointer-events: none;
 }
 
-.cat-badge:hover::after,
-.cat-badge:hover::before {
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
