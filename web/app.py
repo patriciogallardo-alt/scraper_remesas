@@ -7,6 +7,8 @@ import logging
 import requests
 import threading
 from datetime import datetime, timedelta
+import pytz
+from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from flask import Flask, render_template, jsonify, send_file, request
 from src.exporter import load_latest_run, export_to_excel, save_json
@@ -201,6 +203,11 @@ def download_excel():
 
 def background_scrape():
     global scraping_status
+    if scraping_status.get("running", False):
+        logging.info("Scraping ya en ejecución, saltando tarea programada.")
+        return
+        
+    scraping_status["running"] = True
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -218,6 +225,27 @@ def background_scrape():
         logging.error(f"Background scrape failed: {e}")
     finally:
         scraping_status["running"] = False
+
+# ===== Configuración de Cron (Chile) =====
+def init_scheduler():
+    santiago_tz = pytz.timezone('America/Santiago')
+    scheduler = BackgroundScheduler(timezone=santiago_tz)
+    
+    # Horarios acordados: 09:00, 11:00, 13:00, 16:00, 18:00, 20:00
+    scheduler.add_job(
+        func=background_scrape,
+        trigger="cron",
+        hour="9,11,13,16,18,20",
+        minute="0",
+        id="scraper_diario",
+        replace_existing=True
+    )
+    scheduler.start()
+    logging.info("APScheduler iniciado. Ejecuciones programadas a las 9, 11, 13, 16, 18 y 20 horas (Hora Chile).")
+
+# Iniciar el scheduler si no estamos en una ejecución de re-carga de dev
+if not os.getenv("WERKZEUG_RUN_MAIN"):
+    init_scheduler()
 
 
 @app.route("/api/history")

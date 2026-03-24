@@ -5,6 +5,7 @@ import asyncio
 import logging
 import time
 import requests
+import pytz
 from datetime import datetime
 from src.models import ScrapeRun
 from src.config import DESTINATIONS
@@ -25,7 +26,8 @@ async def run_all_scrapers(
     AFEX primero (más rápido, sin browser), luego RIA, luego WU.
     Cada scraper gestiona su propio contexto de browser de forma independiente.
     """
-    scrape_run = ScrapeRun(timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    santiago_tz = pytz.timezone('America/Santiago')
+    scrape_run = ScrapeRun(timestamp=datetime.now(santiago_tz).strftime("%Y-%m-%d %H:%M:%S"))
     start_time = time.time()
 
     # 1. Obtener tasas de mercado en vivo
