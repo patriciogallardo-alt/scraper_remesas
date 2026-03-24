@@ -487,9 +487,9 @@ function updateStats(data, countryFilter) {
     } else {
         const d = feeAfex - feeBest;
         // Positive if AFEX is more expensive (worse), negative if AFEX is cheaper (better)
-        const signStr = d > 0 ? '+' : (d < 0 ? '' : '');
-        const cClass = d === 0 ? 'diff-neutral' : (d < 0 ? 'diff-positive' : 'diff-negative');
-        domDiffFee.innerHTML = `<span class="${cClass}">${signStr}${fmt(d)} CLP</span><div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">vs ${bestFee.agente}</div>`;
+        const signStr = d > 0 ? '+ ' : (d < 0 ? '- ' : '');
+        const cClass = d === 0 ? 'val-neutral' : (d < 0 ? 'val-negative' : 'val-positive');
+        domDiffFee.innerHTML = `<span class="${cClass}">${signStr}${fmt(Math.abs(d))} CLP</span><div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">vs ${bestFee.agente}</div>`;
     }
 }
 
