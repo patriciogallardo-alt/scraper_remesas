@@ -748,3 +748,26 @@ tr:hover td {
     .global-cards { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Custom Multi Select */
+.ms-container { position: relative; width: 100%; }
+.ms-btn {
+    display: flex; justify-content: space-between; align-items: center; width: 100%;
+    padding: 0.6rem 0.8rem; font-size: 0.85rem; background-color: var(--bg-card);
+    border: 1px solid var(--hover-border); border-radius: var(--radius-sm);
+    color: var(--text-primary); cursor: pointer; transition: var(--transition);
+}
+.ms-btn:hover { border-color: rgba(255, 255, 255, 0.3); }
+.ms-dropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; width: 100%;
+    background-color: var(--bg-card); border: 1px solid var(--hover-border);
+    border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 2000; max-height: 250px; overflow-y: auto; display: none; flex-direction: column;
+}
+.ms-dropdown.show { display: flex; }
+.ms-option {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin: 0;
+    cursor: pointer; transition: background 0.2s; font-size: 0.85rem; user-select: none;
+}
+.ms-option:hover { background-color: rgba(255,255,255,0.05); }
+.ms-option input[type="checkbox"] { accent-color: var(--accent-blue); cursor: pointer; }
+

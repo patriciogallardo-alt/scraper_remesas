@@ -120,7 +120,7 @@ def fetch_latest_from_supabase():
         logging.error(f"Error cargando de Supabase: {e}")
         return None
 
-def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, cat_disp=None):
+def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, cat_disp=None, agents=None):
     if not SUPABASE_URL or not SUPABASE_KEY:
         return []
         
@@ -137,9 +137,11 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
     if currency:
         query_url += f"&moneda_destino=eq.{currency}"
     if cat_rec:
-        query_url += f"&categoria_recaudacion=eq.{cat_rec}"
+        query_url += f"&categoria_recaudacion=in.({','.join(cat_rec.split(','))})"
     if cat_disp:
-        query_url += f"&categoria_dispersion=eq.{cat_disp}"
+        query_url += f"&categoria_dispersion=in.({','.join(cat_disp.split(','))})"
+    if agents:
+        query_url += f"&agente=in.({','.join(agents.split(','))})"
         
     query_url += f"&timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.asc"
     
@@ -258,8 +260,9 @@ def get_history():
     currency = request.args.get("currency")
     cat_rec = request.args.get("catRec")
     cat_disp = request.args.get("catDisp")
+    agents = request.args.get("agent")
     
-    data = fetch_history_from_supabase(country, days, currency, cat_rec, cat_disp)
+    data = fetch_history_from_supabase(country, days, currency, cat_rec, cat_disp, agents)
     return jsonify(data)
 
 @app.route("/api/scrape", methods=["POST"])

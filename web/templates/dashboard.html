@@ -64,15 +64,24 @@
             <div class="filter-panel-secondary">
                 <div class="filter-group">
                     <label class="filter-label">Proveedor</label>
-                    <select class="filter-select" id="filter-agent"></select>
+                    <div class="ms-container" id="ms-agent">
+                        <div class="ms-btn" onclick="toggleMs('agent')"><span class="ms-text">Todos</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                        <div class="ms-dropdown" id="dropdown-agent"></div>
+                    </div>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">Cat. Recaudación</label>
-                    <select class="filter-select" id="filter-cat-recaudacion"></select>
+                    <div class="ms-container" id="ms-cat-rec">
+                        <div class="ms-btn" onclick="toggleMs('cat-rec')"><span class="ms-text">Todos</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                        <div class="ms-dropdown" id="dropdown-cat-rec"></div>
+                    </div>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">Cat. Dispersión</label>
-                    <select class="filter-select" id="filter-cat-dispersion"></select>
+                    <div class="ms-container" id="ms-cat-disp">
+                        <div class="ms-btn" onclick="toggleMs('cat-disp')"><span class="ms-text">Todos</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                        <div class="ms-dropdown" id="dropdown-cat-disp"></div>
+                    </div>
                 </div>
             </div>
         </section>

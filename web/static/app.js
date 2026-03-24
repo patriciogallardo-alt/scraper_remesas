@@ -8,11 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
     document.getElementById('btn-scrape').addEventListener('click', triggerScrape);
     document.getElementById('btn-download').addEventListener('click', downloadExcel);
-    document.getElementById('filter-agent').addEventListener('change', renderTable);
     document.getElementById('filter-country').addEventListener('change', onCountryChange);
     document.getElementById('filter-currency').addEventListener('change', renderTable);
-    document.getElementById('filter-cat-recaudacion').addEventListener('change', renderTable);
-    document.getElementById('filter-cat-dispersion').addEventListener('change', renderTable);
+    window._isReady = true;
 });
 
 // ===== Navigation (Tabs) =====
@@ -35,9 +33,9 @@ let historyChartInstance = null;
 async function fetchHistory() {
     const country = document.getElementById('filter-country').value;
     const days = document.getElementById('filter-history-days').value;
-    const currency = document.getElementById('filter-currency').value;
-    const catRec = document.getElementById('filter-cat-recaudacion').value;
-    const catDisp = document.getElementById('filter-cat-dispersion').value;
+    const agent = getMsValues('agent').map(v => encodeURIComponent(v)).join(',');
+    const catRec = getMsValues('cat-rec').map(v => encodeURIComponent(v)).join(',');
+    const catDisp = getMsValues('cat-disp').map(v => encodeURIComponent(v)).join(',');
     
     const emptyState = document.getElementById('history-empty');
     
@@ -53,8 +51,9 @@ async function fetchHistory() {
     try {
         let url = `/api/history?country=${encodeURIComponent(country)}&days=${days}`;
         if (currency) url += `&currency=${encodeURIComponent(currency)}`;
-        if (catRec) url += `&catRec=${encodeURIComponent(catRec)}`;
-        if (catDisp) url += `&catDisp=${encodeURIComponent(catDisp)}`;
+        if (catRec) url += `&catRec=${catRec}`;
+        if (catDisp) url += `&catDisp=${catDisp}`;
+        if (agent) url += `&agent=${agent}`;
         
         const res = await fetch(url);
         if (!res.ok) throw new Error("Fallo la red o Supabase");
@@ -130,7 +129,24 @@ function renderHistoryChart(data) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top' },
+                legend: { 
+                    position: 'top',
+                    onClick: (e, legendItem, legend) => {
+                        const label = legendItem.text;
+                        const cb = document.querySelector(`#dropdown-agent input[value="${label}"]`);
+                        if (cb) {
+                            cb.checked = !cb.checked;
+                            updateMsText('agent'); // This triggers renderTable -> fetchHistory
+                        } else {
+                            // Default action if no checkbox found
+                            const index = legendItem.datasetIndex;
+                            const ci = legend.chart;
+                            const meta = ci.getDatasetMeta(index);
+                            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+                            ci.update();
+                        }
+                    }
+                },
                 tooltip: { 
                     callbacks: {
                         label: function(context) {
@@ -232,11 +248,12 @@ function populateFilters() {
     const catRecaudacion = [...new Set(allData.map(r => r.categoria_recaudacion).filter(Boolean))].sort();
     const catDispersion = [...new Set(allData.map(r => r.categoria_dispersion).filter(Boolean))].sort();
 
-    fillSelect('filter-agent', agents);
     fillSelect('filter-country', countries);
     fillSelect('filter-currency', currencies);
-    fillSelect('filter-cat-recaudacion', catRecaudacion);
-    fillSelect('filter-cat-dispersion', catDispersion);
+    
+    populateMultiFilter('agent', agents);
+    populateMultiFilter('cat-rec', catRecaudacion);
+    populateMultiFilter('cat-disp', catDispersion);
 }
 
 function fillSelect(id, options) {
@@ -250,20 +267,20 @@ function fillSelect(id, options) {
 }
 
 function getFilteredData() {
-    const agent = document.getElementById('filter-agent').value;
+    const agent = getMsValues('agent');
     const country = document.getElementById('filter-country').value;
     const currency = document.getElementById('filter-currency').value;
-    const catRec = document.getElementById('filter-cat-recaudacion').value;
-    const catDisp = document.getElementById('filter-cat-dispersion').value;
+    const catRec = getMsValues('cat-rec');
+    const catDisp = getMsValues('cat-disp');
 
     return allData.filter(r =>
         r.metodo_recaudacion !== 'N/D' &&
         r.metodo_dispersion !== 'N/D' &&
-        (!agent || r.agente === agent) &&
+        (agent.length === 0 || agent.includes(r.agente)) &&
         (!country || r.pais_destino === country) &&
         (!currency || r.moneda_destino === currency) &&
-        (!catRec || r.categoria_recaudacion === catRec) &&
-        (!catDisp || r.categoria_dispersion === catDisp)
+        (catRec.length === 0 || catRec.includes(r.categoria_recaudacion)) &&
+        (catDisp.length === 0 || catDisp.includes(r.categoria_dispersion))
     );
 }
 
@@ -622,3 +639,48 @@ document.addEventListener('DOMContentLoaded', () => {
         tableScroll.style.userSelect = '';
     });
 });
+
+// ===== Custom Multi Select Logic =====
+window.toggleMs = function(id) {
+    document.querySelectorAll('.ms-dropdown').forEach(d => {
+        if (d.id !== `dropdown-${id}`) d.classList.remove('show');
+    });
+    document.getElementById(`dropdown-${id}`).classList.toggle('show');
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ms-container')) {
+        document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('show'));
+    }
+});
+
+window.updateMsText = function(id, trigger = true) {
+    const container = document.getElementById(`dropdown-${id}`);
+    if (!container) return;
+    const checked = Array.from(container.querySelectorAll('input:checked')).length;
+    const btn = document.querySelector(`#ms-${id} .ms-text`);
+    if (checked === 0) {
+        btn.innerText = 'Todos';
+    } else {
+        btn.innerText = `${checked} seleccionado${checked>1?'s':''}`;
+    }
+    if (trigger && window._isReady) renderTable(); 
+}
+
+function getMsValues(id) {
+    const container = document.getElementById(`dropdown-${id}`);
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value);
+}
+
+function populateMultiFilter(containerId, dataList) {
+    const container = document.getElementById(`dropdown-${containerId}`);
+    if (!container) return;
+    const options = [...new Set(dataList.filter(v => v !== '-' && v !== '' && v !== 'N/D' && v != null))].sort();
+    let html = '';
+    options.forEach(opt => {
+        html += `<label class="ms-option"><input type="checkbox" value="${opt}" onchange="updateMsText('${containerId}')"> ${opt}</label>`;
+    });
+    container.innerHTML = html;
+    updateMsText(containerId, false);
+}
