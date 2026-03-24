@@ -118,7 +118,7 @@ def fetch_latest_from_supabase():
         logging.error(f"Error cargando de Supabase: {e}")
         return None
 
-def fetch_history_from_supabase(country, days=7):
+def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, cat_disp=None):
     if not SUPABASE_URL or not SUPABASE_KEY:
         return []
         
@@ -131,7 +131,15 @@ def fetch_history_from_supabase(country, days=7):
     
     threshold_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
     
-    query_url = f"{url}?select=timestamp_scrape,agente,tasa_cambio_final&pais_destino=eq.{country}&timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.asc"
+    query_url = f"{url}?select=timestamp_scrape,agente,tasa_cambio_final&pais_destino=eq.{country}"
+    if currency:
+        query_url += f"&moneda_destino=eq.{currency}"
+    if cat_rec:
+        query_url += f"&categoria_recaudacion=eq.{cat_rec}"
+    if cat_disp:
+        query_url += f"&categoria_dispersion=eq.{cat_disp}"
+        
+    query_url += f"&timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.asc"
     
     try:
         resp = requests.get(query_url, headers=headers, timeout=15)
@@ -218,7 +226,11 @@ def get_history():
     if not country:
         return jsonify([])
     days = request.args.get("days", default=7, type=int)
-    data = fetch_history_from_supabase(country, days)
+    currency = request.args.get("currency")
+    cat_rec = request.args.get("catRec")
+    cat_disp = request.args.get("catDisp")
+    
+    data = fetch_history_from_supabase(country, days, currency, cat_rec, cat_disp)
     return jsonify(data)
 
 @app.route("/api/scrape", methods=["POST"])

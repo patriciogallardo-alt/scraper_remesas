@@ -35,6 +35,10 @@ let historyChartInstance = null;
 async function fetchHistory() {
     const country = document.getElementById('filter-country').value;
     const days = document.getElementById('filter-history-days').value;
+    const currency = document.getElementById('filter-currency').value;
+    const catRec = document.getElementById('filter-cat-recaudacion').value;
+    const catDisp = document.getElementById('filter-cat-dispersion').value;
+    
     const emptyState = document.getElementById('history-empty');
     
     if (!country) {
@@ -47,7 +51,12 @@ async function fetchHistory() {
     document.getElementById('history-loading').style.display = 'block';
     
     try {
-        const res = await fetch(`/api/history?country=${encodeURIComponent(country)}&days=${days}`);
+        let url = `/api/history?country=${encodeURIComponent(country)}&days=${days}`;
+        if (currency) url += `&currency=${encodeURIComponent(currency)}`;
+        if (catRec) url += `&catRec=${encodeURIComponent(catRec)}`;
+        if (catDisp) url += `&catDisp=${encodeURIComponent(catDisp)}`;
+        
+        const res = await fetch(url);
         if (!res.ok) throw new Error("Fallo la red o Supabase");
         const data = await res.json();
         
