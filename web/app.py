@@ -6,8 +6,9 @@ import os
 import logging
 import requests
 import threading
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from flask import Flask, render_template, jsonify, send_file
+from flask import Flask, render_template, jsonify, send_file, request
 from src.exporter import load_latest_run, export_to_excel, save_json
 from src.orchestrator import run_all_scrapers
 from src.config import DATA_DIR
@@ -117,6 +118,35 @@ def fetch_latest_from_supabase():
         logging.error(f"Error cargando de Supabase: {e}")
         return None
 
+def fetch_history_from_supabase(country, days=7):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return []
+        
+    url = f"{SUPABASE_URL}/rest/v1/remittance_quotes"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    threshold_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    
+    query_url = f"{url}?select=timestamp_scrape,agente,tasa_cambio_final&pais_destino=eq.{country}&timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.asc"
+    
+    try:
+        resp = requests.get(query_url, headers=headers, timeout=15)
+        if not resp.ok:
+            return []
+        results = resp.json()
+        
+        # Mapear
+        for r in results:
+            r["timestamp"] = r.pop("timestamp_scrape", "")
+        return results
+    except Exception as e:
+        logging.error(f"Error cargando historia de Supabase: {e}")
+        return []
+
 
 @app.route("/")
 def dashboard():
@@ -181,6 +211,15 @@ def background_scrape():
     finally:
         scraping_status["running"] = False
 
+
+@app.route("/api/history")
+def get_history():
+    country = request.args.get("country")
+    if not country:
+        return jsonify([])
+    days = request.args.get("days", default=7, type=int)
+    data = fetch_history_from_supabase(country, days)
+    return jsonify(data)
 
 @app.route("/api/scrape", methods=["POST"])
 def trigger_scrape():

@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -37,8 +38,15 @@
 
     <!-- MAIN -->
     <main class="main">
+    
+        <!-- TABS NAVIGATION -->
+        <nav class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">🏠 Resumen Ejecutivo</button>
+            <button class="tab-btn" onclick="switchTab('history')">📈 Evolución Histórica</button>
+            <button class="tab-btn" onclick="switchTab('data')">🗄️ Base de Datos</button>
+        </nav>
 
-        <!-- FILTER PANEL -->
+        <!-- FILTER PANEL (Global for all tabs) -->
         <section class="filter-panel" id="filter-panel">
             <div class="filter-panel-primary">
                 <div class="filter-group filter-group-lg">
@@ -69,75 +77,144 @@
                 </div>
             </div>
         </section>
+        <!-- TAB 1: DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active">
+            
+            <!-- GLOBAL EMPTY STATE (shows when no country selected) -->
+            <section class="global-summary" id="global-summary">
+                <div class="global-cards">
+                    <div class="comp-card">
+                        <div class="comp-label">Total Cotizaciones Capturadas</div>
+                        <div class="comp-value val-large" id="global-total-quotes">-</div>
+                    </div>
+                    <div class="comp-card">
+                        <div class="comp-label">Países Monitoreados</div>
+                        <div class="comp-value val-large" id="global-total-countries">-</div>
+                    </div>
+                    <div class="comp-card">
+                        <div class="comp-label">Proveedores Activos</div>
+                        <div class="comp-value val-large" id="global-total-agents">-</div>
+                    </div>
+                    <div class="comp-card" style="background:var(--bg-secondary)">
+                        <div class="comp-label">Última Actualización Base de Datos</div>
+                        <div class="comp-value" id="global-last-update" style="font-size:1.1rem;margin-top:0.5rem">-</div>
+                    </div>
+                </div>
+                
+                <div class="empty-state" style="margin-top:2rem;background:white;border:1px dashed var(--border-color)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="1.5" style="width:48px;height:48px;margin-bottom:1rem">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <h3>Inteligencia Competitiva</h3>
+                    <p>Selecciona un <strong>País Destino</strong> en la barra superior para desplegar la comparativa<br>exacta de mercado (AFEX vs Proveedores) para ese mercado.</p>
+                </div>
+            </section>
 
-        <!-- COMPETITIVE STATS (hidden until country filter) -->
-        <section class="competitive-grid" id="stats-grid" style="display:none">
-            <!-- Row 1: Global Bests -->
-            <div class="comp-card" id="cc-best-tc">
-                <div class="comp-label">Mejor TC Final Global</div>
-                <div class="comp-value" id="val-best-tc">-</div>
-                <div class="comp-sub" id="sub-best-tc">Seleccione país</div>
-            </div>
-            <div class="comp-card" id="cc-best-norm">
-                <div class="comp-label">Mejor TC Normalizado Global</div>
-                <div class="comp-value" id="val-best-norm">-</div>
-                <div class="comp-sub" id="sub-best-norm">Seleccione país</div>
-            </div>
-            <div class="comp-card" id="cc-best-fee">
-                <div class="comp-label">Menor Fee Base Global</div>
-                <div class="comp-value" id="val-best-fee">-</div>
-                <div class="comp-sub" id="sub-best-fee">Seleccione país</div>
+            <!-- COMPETITIVE STATS (shows when country is filtered) -->
+            <section class="competitive-grid" id="stats-grid" style="display:none">
+                <!-- Row 1: Global Bests -->
+                <div class="comp-card" id="cc-best-tc">
+                    <div class="comp-label">Mejor TC Final Global</div>
+                    <div class="comp-value" id="val-best-tc">-</div>
+                    <div class="comp-sub" id="sub-best-tc">Seleccione país</div>
+                </div>
+                <div class="comp-card" id="cc-best-norm">
+                    <div class="comp-label">Mejor TC Normalizado Global</div>
+                    <div class="comp-value" id="val-best-norm">-</div>
+                    <div class="comp-sub" id="sub-best-norm">Seleccione país</div>
+                </div>
+                <div class="comp-card" id="cc-best-fee">
+                    <div class="comp-label">Menor Fee Base Global</div>
+                    <div class="comp-value" id="val-best-fee">-</div>
+                    <div class="comp-sub" id="sub-best-fee">Seleccione país</div>
+                </div>
+                
+                <!-- Spanning column for Total Quotes -->
+                <div class="comp-card comp-card--span3" id="cc-total-quotes">
+                    <div class="comp-label">Total Cotizaciones</div>
+                    <div class="comp-value val-large" id="val-total-quotes">0</div>
+                    <div class="comp-sub">Para los filtros seleccionados</div>
+                </div>
+
+                <!-- Row 2: AFEX Bests -->
+                <div class="comp-card comp-card--afex" id="cc-afex-tc">
+                    <div class="comp-label">Mejor TC Final AFEX</div>
+                    <div class="comp-value" id="val-afex-tc">-</div>
+                    <div class="comp-sub" id="sub-afex-tc"></div>
+                </div>
+                <div class="comp-card comp-card--afex" id="cc-afex-norm">
+                    <div class="comp-label">Mejor TC Normalizado AFEX</div>
+                    <div class="comp-value" id="val-afex-norm">-</div>
+                    <div class="comp-sub" id="sub-afex-norm"></div>
+                </div>
+                <div class="comp-card comp-card--afex" id="cc-afex-fee">
+                    <div class="comp-label">Menor Fee Base AFEX</div>
+                    <div class="comp-value" id="val-afex-fee">-</div>
+                    <div class="comp-sub" id="sub-afex-fee"></div>
+                </div>
+
+                <!-- Row 3: Differences -->
+                <div class="comp-card comp-card--diff" id="cc-diff-tc">
+                    <div class="comp-label">Brecha TC Final</div>
+                    <div class="comp-value" id="val-diff-tc">-</div>
+                    <div class="comp-sub">AFEX vs Mejor Mercado</div>
+                </div>
+                <div class="comp-card comp-card--diff" id="cc-diff-norm">
+                    <div class="comp-label">Brecha TC Normalizado</div>
+                    <div class="comp-value" id="val-diff-norm">-</div>
+                    <div class="comp-sub">AFEX vs Mejor Mercado</div>
+                </div>
+                <div class="comp-card comp-card--diff" id="cc-diff-fee">
+                    <div class="comp-label">Brecha Fee Base</div>
+                    <div class="comp-value" id="val-diff-fee">-</div>
+                    <div class="comp-sub">AFEX vs Mejor Mercado</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: HISTORICAL TRENDS -->
+        <div id="tab-history" class="tab-content" style="display:none">
+            <div class="filter-panel" style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h2 style="font-size: 1.25rem; color: var(--text-dark);">Tendencia del Mercado</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top:0.2rem">Evolución histórica del TC Final por proveedor.</p>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Período Histórico</label>
+                    <select class="filter-select" id="filter-history-days" onchange="fetchHistory()">
+                        <option value="7">Últimos 7 días</option>
+                        <option value="15">Últimos 15 días</option>
+                        <option value="30">Últimos 30 días</option>
+                    </select>
+                </div>
             </div>
             
-            <!-- Spanning column for Total Quotes -->
-            <div class="comp-card comp-card--span3" id="cc-total-quotes">
-                <div class="comp-label">Total Cotizaciones</div>
-                <div class="comp-value val-large" id="val-total-quotes">0</div>
-                <div class="comp-sub">Para los filtros seleccionados</div>
+            <div class="comp-card" id="history-container" style="height: 400px; padding:20px; position:relative;">
+                <canvas id="historyChart"></canvas>
+                <div id="history-empty" class="empty-state" style="position:absolute; top:0; left:0; right:0; bottom:0; padding-top:60px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    <h3>Selecciona un País Destino</h3>
+                    <p>Necesitas filtrar por país en la barra superior para graficar el histórico.</p>
+                </div>
+                <div id="history-loading" class="loading-overlay" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.8); z-index:10; border-radius:12px;">
+                    <div style="text-align:center; margin-top:140px;">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text" style="color:var(--text-dark)">Consultando histórico en base de datos...</p>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <!-- Row 2: AFEX Bests -->
-            <div class="comp-card comp-card--afex" id="cc-afex-tc">
-                <div class="comp-label">Mejor TC Final AFEX</div>
-                <div class="comp-value" id="val-afex-tc">-</div>
-                <div class="comp-sub" id="sub-afex-tc"></div>
-            </div>
-            <div class="comp-card comp-card--afex" id="cc-afex-norm">
-                <div class="comp-label">Mejor TC Normalizado AFEX</div>
-                <div class="comp-value" id="val-afex-norm">-</div>
-                <div class="comp-sub" id="sub-afex-norm"></div>
-            </div>
-            <div class="comp-card comp-card--afex" id="cc-afex-fee">
-                <div class="comp-label">Menor Fee Base AFEX</div>
-                <div class="comp-value" id="val-afex-fee">-</div>
-                <div class="comp-sub" id="sub-afex-fee"></div>
-            </div>
-
-            <!-- Row 3: Differences -->
-            <div class="comp-card comp-card--diff" id="cc-diff-tc">
-                <div class="comp-label">Brecha TC Final</div>
-                <div class="comp-value" id="val-diff-tc">-</div>
-                <div class="comp-sub">AFEX vs Mejor Mercado</div>
-            </div>
-            <div class="comp-card comp-card--diff" id="cc-diff-norm">
-                <div class="comp-label">Brecha TC Normalizado</div>
-                <div class="comp-value" id="val-diff-norm">-</div>
-                <div class="comp-sub">AFEX vs Mejor Mercado</div>
-            </div>
-            <div class="comp-card comp-card--diff" id="cc-diff-fee">
-                <div class="comp-label">Brecha Fee Base</div>
-                <div class="comp-value" id="val-diff-fee">-</div>
-                <div class="comp-sub">AFEX vs Mejor Mercado</div>
-            </div>
-        </section>
-
-        <!-- Table -->
-        <section class="table-container" id="table-container">
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable(0)">Agente <span class="sort-arrow"></span></th>
+        <!-- TAB 3: DATA TABLE -->
+        <div id="tab-data" class="tab-content" style="display:none">
+            <section class="table-container" id="table-container">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0)">Agente <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(1)">País Destino <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(2)">Moneda Origen <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(3)">Moneda Destino <span class="sort-arrow"></span></th>
@@ -168,6 +245,7 @@
             <h3>Sin datos disponibles</h3>
             <p>Ejecuta el scraping para obtener cotizaciones de remesas.</p>
         </div>
+        </div> <!-- Close tab-data -->
 
     </main>
 

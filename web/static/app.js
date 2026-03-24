@@ -15,6 +15,136 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-cat-dispersion').addEventListener('change', renderTable);
 });
 
+// ===== Navigation (Tabs) =====
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+    const tab = document.getElementById('tab-' + tabId);
+    if (tab) tab.style.display = 'block';
+
+    if (tabId === 'history') {
+        fetchHistory();
+    }
+}
+
+let historyChartInstance = null;
+async function fetchHistory() {
+    const country = document.getElementById('filter-country').value;
+    const days = document.getElementById('filter-history-days').value;
+    const emptyState = document.getElementById('history-empty');
+    
+    if (!country) {
+        emptyState.style.display = 'block';
+        if (historyChartInstance) { historyChartInstance.destroy(); historyChartInstance = null; }
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    document.getElementById('history-loading').style.display = 'block';
+    
+    try {
+        const res = await fetch(`/api/history?country=${encodeURIComponent(country)}&days=${days}`);
+        if (!res.ok) throw new Error("Fallo la red o Supabase");
+        const data = await res.json();
+        
+        renderHistoryChart(data);
+    } catch (err) {
+        console.error("Error fetching history:", err);
+    } finally {
+        document.getElementById('history-loading').style.display = 'none';
+    }
+}
+
+function renderHistoryChart(data) {
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    if (historyChartInstance) { historyChartInstance.destroy(); }
+    
+    if (!data || data.length === 0) {
+        // Nada que graficar
+        return;
+    }
+    
+    // Agrupar por fecha ("YYYY-MM-DD") y agente
+    // Para simplificar, tomaremos el mejor TC (máximo) por agente por día
+    const aggregated = {};
+    const datesSet = new Set();
+    
+    data.forEach(r => {
+        if (!r.timestamp || !r.agente || !r.tasa_cambio_final) return;
+        const dateStr = r.timestamp.split('T')[0];
+        datesSet.add(dateStr);
+        
+        if (!aggregated[dateStr]) aggregated[dateStr] = {};
+        if (!aggregated[dateStr][r.agente]) {
+            aggregated[dateStr][r.agente] = r.tasa_cambio_final;
+        } else {
+            // Quedarse con el mejor (más alto) del día para ese proveedor
+            if (r.tasa_cambio_final > aggregated[dateStr][r.agente]) {
+                aggregated[dateStr][r.agente] = r.tasa_cambio_final;
+            }
+        }
+    });
+    
+    const labels = Array.from(datesSet).sort();
+    
+    // Colores y series
+    const agCol = {
+        'AFEX': '#1F4E79',
+        'Western Union': '#FFCC00',
+        'RIA': '#f37021'
+    };
+    
+    const agents = Array.from(new Set(data.map(d => d.agente)));
+    const datasets = agents.map(ag => {
+        const mappedData = labels.map(day => aggregated[day][ag] || null); // null rompe la linea si falta
+        return {
+            label: ag,
+            data: mappedData,
+            borderColor: agCol[ag] || '#999',
+            backgroundColor: agCol[ag] || '#999',
+            borderWidth: 3,
+            tension: 0.1,
+            pointRadius: 4,
+            spanGaps: true // Conectar puntos si falta data en medio
+        };
+    });
+    
+    historyChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { 
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) { label += ': '; }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    title: { display: true, text: 'Tasa de Cambio Final (CLP)' },
+                    ticks: { callback: function(value) { return value.toLocaleString('es-CL'); } }
+                }
+            }
+        }
+    });
+}
+
 function onCountryChange() {
     // When country changes, update currency filter options to match
     const country = document.getElementById('filter-country').value;
@@ -135,15 +265,24 @@ function renderTable() {
     const emptyState = document.getElementById('empty-state');
     const tableContainer = document.getElementById('table-container');
     const statsGrid = document.getElementById('stats-grid');
+    const globalSummary = document.getElementById('global-summary');
 
     // Show stats only when country filter is active
     const countryFilter = document.getElementById('filter-country').value;
 
     if (countryFilter) {
         statsGrid.style.display = '';
+        if (globalSummary) globalSummary.style.display = 'none';
         updateStats(filtered, countryFilter);
+        
+        // Auto-refresh history if currently viewing history tab
+        const histBtn = document.querySelector('.tab-btn[onclick*="history"]');
+        if (histBtn && histBtn.classList.contains('active')) {
+            fetchHistory();
+        }
     } else {
         statsGrid.style.display = 'none';
+        if (globalSummary) globalSummary.style.display = 'block';
     }
 
     if (!filtered.length) {
@@ -321,12 +460,34 @@ function updateStats(data, countryFilter) {
 }
 
 function updateMeta(meta) {
-    const el = document.getElementById('meta-info');
-    if (!meta) {
-        el.textContent = 'Sin datos';
-        return;
+    if (!meta) return;
+    
+    // Header timestamp
+    document.getElementById('meta-info').textContent = `Actualizado: ${meta.timestamp} (${meta.total_quotes} cot.)`;
+
+    // Global Summary Empty State Variables
+    const domQuot = document.getElementById('global-total-quotes');
+    const domCoun = document.getElementById('global-total-countries');
+    const domAg = document.getElementById('global-total-agents');
+    const domUpd = document.getElementById('global-last-update');
+    
+    if (domQuot) domQuot.innerText = meta.total_quotes || allData.length;
+    if (domCoun) {
+        const countries = new Set(allData.map(r => r.pais_destino)).size;
+        domCoun.innerText = countries;
     }
-    el.textContent = `${meta.timestamp} · ${meta.total_quotes} quotes · ${meta.duration_seconds}s`;
+    if (domAg) {
+        const agents = new Set(allData.map(r => r.agente)).size;
+        domAg.innerText = agents;
+    }
+    if (domUpd) {
+        try {
+            const dt = new Date(meta.timestamp);
+            domUpd.innerText = dt.toLocaleString() !== 'Invalid Date' ? dt.toLocaleString() : meta.timestamp;
+        } catch(e) {
+            domUpd.innerText = meta.timestamp;
+        }
+    }
 }
 
 // ===== Helpers =====
