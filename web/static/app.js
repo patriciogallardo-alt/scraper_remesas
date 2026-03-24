@@ -393,13 +393,12 @@ function updateStats(data, countryFilter) {
     // Helper para formatear
     const fRate = (v, c) => `${fmtRate(v)} CLP/${c}`;
     const fFee = (v) => `${fmtDecTwo(v)} CLP`;
-    const fMethod = (r) => {
+    const fMethod = (r, showExtraAgent = true) => {
         if (!r) return 'Sin datos';
-        let text = `Ofrecido por <strong>${r.agente}</strong><br>`;
-        text += `<span style="color:var(--text-muted)">Recaudación:</span> ${r.categoria_recaudacion || 'N/D'}<br>`;
+        let text = `<span style="color:var(--text-muted)">Recaudación:</span> ${r.categoria_recaudacion || 'N/D'}<br>`;
         text += `<span style="color:var(--text-muted)">Dispersión:</span> ${r.categoria_dispersion || 'N/D'}`;
         
-        if (r.agente === 'AFEX' && r.metodo_dispersion) {
+        if (showExtraAgent && r.agente === 'AFEX' && r.metodo_dispersion) {
             const match = r.metodo_dispersion.match(/\((.*?)\)/);
             if (match) {
                 text += `<br><span style="color:var(--accent-blue);font-weight:600">Agente: ${match[1]}</span>`;
@@ -423,23 +422,23 @@ function updateStats(data, countryFilter) {
 
     // Populate Global Bests
     document.getElementById('val-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? fRate(bestTc.tasa_cambio_final, targetCurrency) : '-';
-    document.getElementById('sub-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? `Ofrecido por <strong>${bestTc.agente}</strong><br>(${fMethod(bestTc)})` : '';
+    document.getElementById('sub-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? `Ofrecido por <strong>${bestTc.agente}</strong><br>` + fMethod(bestTc, false) : '';
 
     document.getElementById('val-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? fRate(bestNorm.tasa_cambio_normalizada, targetCurrency) : '-';
-    document.getElementById('sub-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? `Ofrecido por <strong>${bestNorm.agente}</strong><br>(${fMethod(bestNorm)})` : '';
+    document.getElementById('sub-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? `Ofrecido por <strong>${bestNorm.agente}</strong><br>` + fMethod(bestNorm, false) : '';
 
     document.getElementById('val-best-fee').innerHTML = !bestFee.__fake ? fFee(getFee(bestFee)) : '-';
-    document.getElementById('sub-best-fee').innerHTML = !bestFee.__fake ? `Ofrecido por <strong>${bestFee.agente}</strong><br>(${fMethod(bestFee)})` : '';
+    document.getElementById('sub-best-fee').innerHTML = !bestFee.__fake ? `Ofrecido por <strong>${bestFee.agente}</strong><br>` + fMethod(bestFee, false) : '';
 
     // Populate AFEX Bests
     document.getElementById('val-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? fRate(afexTc.tasa_cambio_final, targetCurrency) : '<span style="color:#aaa">N/A</span>';
-    document.getElementById('sub-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? `${fMethod(afexTc)}` : '';
+    document.getElementById('sub-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? `Ofrecido por <strong>${afexTc.agente}</strong><br>` + fMethod(afexTc, true) : '';
 
     document.getElementById('val-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? fRate(afexNorm.tasa_cambio_normalizada, targetCurrency) : '<span style="color:#aaa">N/A</span>';
-    document.getElementById('sub-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? `${fMethod(afexNorm)}` : '';
+    document.getElementById('sub-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? `Ofrecido por <strong>${afexNorm.agente}</strong><br>` + fMethod(afexNorm, true) : '';
 
     document.getElementById('val-afex-fee').innerHTML = !afexFee.__fake ? fFee(getFee(afexFee)) : '<span style="color:#aaa">N/A</span>';
-    document.getElementById('sub-afex-fee').innerHTML = !afexFee.__fake ? `${fMethod(afexFee)}` : '';
+    document.getElementById('sub-afex-fee').innerHTML = !afexFee.__fake ? `Ofrecido por <strong>${afexFee.agente}</strong><br>` + fMethod(afexFee, true) : '';
 
     // Calculate Differences
     const domDiffTc = document.getElementById('val-diff-tc');
@@ -482,7 +481,7 @@ function updateStats(data, countryFilter) {
     // Fee Diff (Zero decimals)
     const feeAfex = getFee(afexFee);
     const feeBest = getFee(bestFee);
-    if (!feeAfex || !feeBest) {
+    if (afexFee.__fake || bestFee.__fake) {
         domDiffFee.innerHTML = '-';
         domDiffFee.className = 'comp-value';
     } else {
