@@ -37,7 +37,8 @@ function switchTab(tabId) {
 let historyChartInstance = null;
 async function fetchHistory() {
     const country = document.getElementById('filter-country').value;
-    const days = document.getElementById('filter-days')?.value || 7;
+    const globalDays = parseInt(document.getElementById('filter-days')?.value || '7', 10);
+    const days = globalDays > 0 ? globalDays : 7; // History always needs at least 7 days
     const currency = document.getElementById('filter-currency').value;
     const agent = getMsValues('agent').map(v => encodeURIComponent(v)).join(',');
     const catRec = getMsValues('cat-rec').map(v => encodeURIComponent(v)).join(',');
@@ -194,6 +195,10 @@ async function loadData() {
         updateMeta(json.metadata);
         populateFilters();
         renderTable();
+        // If history tab is active, refresh the chart too
+        if (document.getElementById('tab-history')?.style.display !== 'none') {
+            fetchHistory();
+        }
     } catch (e) {
         console.error('Error cargando datos:', e);
     }
