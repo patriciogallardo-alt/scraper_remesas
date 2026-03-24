@@ -643,19 +643,24 @@ document.addEventListener('click', (e) => {
     }
 });
 
-window.resetMs = function(id) {
+window.toggleAllMs = function(id) {
     const container = document.getElementById(`dropdown-${id}`);
     if (!container) return;
-    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
     updateMsText(id);
 }
 
 window.updateMsText = function(id, trigger = true) {
     const container = document.getElementById(`dropdown-${id}`);
     if (!container) return;
-    const checked = Array.from(container.querySelectorAll('input:checked')).length;
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const total = checkboxes.length;
     const btn = document.querySelector(`#ms-${id} .ms-text`);
-    if (checked === 0) {
+    
+    if (checked === 0 || (total > 0 && checked === total)) {
         btn.innerText = 'Todos';
     } else {
         btn.innerText = `${checked} seleccionado${checked>1?'s':''}`;
@@ -673,7 +678,7 @@ function populateMultiFilter(containerId, dataList) {
     const container = document.getElementById(`dropdown-${containerId}`);
     if (!container) return;
     const options = [...new Set(dataList.filter(v => v !== '-' && v !== '' && v !== 'N/D' && v != null))].sort();
-    let html = `<div class="ms-header" onclick="resetMs('${containerId}')">Seleccionar Todos (Ver Todo)</div>`;
+    let html = `<div class="ms-header" onclick="toggleAllMs('${containerId}')">Seleccionar / Deseleccionar Todo</div>`;
     options.forEach(opt => {
         html += `<label class="ms-option"><input type="checkbox" value="${opt}" onchange="updateMsText('${containerId}')"> ${opt}</label>`;
     });
