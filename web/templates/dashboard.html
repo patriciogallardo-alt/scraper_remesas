@@ -46,8 +46,7 @@
             <button class="tab-btn" onclick="switchTab('data')">Base de Datos</button>
         </nav>
 
-        <!-- FILTER PANEL (Global for all tabs) -->
-        <section class="filter-panel" id="filter-panel">
+        <section class="filter-panel" id="filter-panel" style="position:relative; z-index:20;">
             <div class="filter-panel-primary">
                 <div class="filter-group filter-group-lg">
                     <label class="filter-label">
@@ -114,17 +113,17 @@
             <section class="competitive-grid" id="stats-grid" style="display:none">
                 <!-- Row 1: Global Bests -->
                 <div class="comp-card" id="cc-best-tc">
-                    <div class="comp-label">Mejor TC Final Global</div>
+                    <div class="comp-label" title="(Monto Enviado + Fee Total) / Monto Recibido">Mejor TC Final Global ⓘ</div>
                     <div class="comp-value" id="val-best-tc">-</div>
                     <div class="comp-sub" id="sub-best-tc">Seleccione país</div>
                 </div>
                 <div class="comp-card" id="cc-best-norm">
-                    <div class="comp-label">Mejor TC Normalizado Global</div>
+                    <div class="comp-label" title="Tasa de cambio pura ofrecida por el proveedor, sin considerar fees">Mejor TC Normalizado Global ⓘ</div>
                     <div class="comp-value" id="val-best-norm">-</div>
                     <div class="comp-sub" id="sub-best-norm">Seleccione país</div>
                 </div>
                 <div class="comp-card" id="cc-best-fee">
-                    <div class="comp-label">Menor Fee Base Global</div>
+                    <div class="comp-label" title="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">Menor Fee Final Global ⓘ</div>
                     <div class="comp-value" id="val-best-fee">-</div>
                     <div class="comp-sub" id="sub-best-fee">Seleccione país</div>
                 </div>
@@ -138,17 +137,17 @@
 
                 <!-- Row 2: AFEX Bests -->
                 <div class="comp-card comp-card--afex" id="cc-afex-tc">
-                    <div class="comp-label">Mejor TC Final AFEX</div>
+                    <div class="comp-label" title="(Monto Enviado + Fee Total) / Monto Recibido">Mejor TC Final AFEX</div>
                     <div class="comp-value" id="val-afex-tc">-</div>
                     <div class="comp-sub" id="sub-afex-tc"></div>
                 </div>
                 <div class="comp-card comp-card--afex" id="cc-afex-norm">
-                    <div class="comp-label">Mejor TC Normalizado AFEX</div>
+                    <div class="comp-label" title="Tasa de cambio pura ofrecida por AFEX, sin considerar fees">Mejor TC Normalizado AFEX</div>
                     <div class="comp-value" id="val-afex-norm">-</div>
                     <div class="comp-sub" id="sub-afex-norm"></div>
                 </div>
                 <div class="comp-card comp-card--afex" id="cc-afex-fee">
-                    <div class="comp-label">Menor Fee Base AFEX</div>
+                    <div class="comp-label" title="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">Menor Fee Final AFEX</div>
                     <div class="comp-value" id="val-afex-fee">-</div>
                     <div class="comp-sub" id="sub-afex-fee"></div>
                 </div>
@@ -165,7 +164,7 @@
                     <div class="comp-sub">AFEX vs Mejor Mercado</div>
                 </div>
                 <div class="comp-card comp-card--diff" id="cc-diff-fee">
-                    <div class="comp-label">Brecha Fee Base</div>
+                    <div class="comp-label">Brecha Fee Final</div>
                     <div class="comp-value" id="val-diff-fee">-</div>
                     <div class="comp-sub">AFEX vs Mejor Mercado</div>
                 </div>

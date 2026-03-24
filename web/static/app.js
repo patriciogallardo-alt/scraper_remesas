@@ -392,8 +392,21 @@ function updateStats(data, countryFilter) {
 
     // Helper para formatear
     const fRate = (v, c) => `${fmtRate(v)} CLP/${c}`;
-    const fFee = (v) => `${fmt(v)} CLP`;
-    const fMethod = (r) => `${r.categoria_recaudacion || 'N/D'} / ${r.categoria_dispersion || 'N/D'}`;
+    const fFee = (v) => `${fmtDecTwo(v)} CLP`;
+    const fMethod = (r) => {
+        if (!r) return 'Sin datos';
+        let text = `Ofrecido por <strong>${r.agente}</strong><br>`;
+        text += `<span style="color:var(--text-muted)">Recaudación:</span> ${r.metodo_recaudacion || 'N/D'}<br>`;
+        text += `<span style="color:var(--text-muted)">Dispersión:</span> ${r.metodo_dispersion || 'N/D'}`;
+        
+        if (r.agente === 'AFEX' && r.metodo_dispersion) {
+            const match = r.metodo_dispersion.match(/\((.*?)\)/);
+            if (match) {
+                text += `<br><span style="color:var(--accent-blue);font-weight:600">Agente: ${match[1]}</span>`;
+            }
+        }
+        return text;
+    };
     const getFee = (r) => (r.fee_base || 0) + (r.fee_impuesto || 0);
 
     // 1. Global Bests
@@ -522,6 +535,11 @@ function agentClass(name) {
     if (name.includes('Western') || name.includes('WU')) return 'wu';
     if (name.includes('AFEX')) return 'afex';
     return '';
+}
+
+function fmtDecTwo(val) {
+    if (val === undefined || val === null) return '-';
+    return Number(val).toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 function fmt(n) {
