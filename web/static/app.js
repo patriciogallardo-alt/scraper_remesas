@@ -23,9 +23,18 @@ function onCountryChange() {
             allData.filter(r => r.pais_destino === country).map(r => r.moneda_destino)
         )].sort();
         fillSelect('filter-currency', currencies);
+        
+        // Auto-select foreign currency (prefer not USD if available)
+        const nonUsd = currencies.filter(c => c !== 'USD');
+        if (nonUsd.length > 0) {
+            document.getElementById('filter-currency').value = nonUsd[0];
+        } else if (currencies.length > 0) {
+            document.getElementById('filter-currency').value = currencies[0];
+        }
     } else {
         const currencies = [...new Set(allData.map(r => r.moneda_destino))].sort();
         fillSelect('filter-currency', currencies);
+        document.getElementById('filter-currency').value = '';
     }
     renderTable();
 }
@@ -236,65 +245,79 @@ function updateStats(data, countryFilter) {
     // Helper para formatear
     const fRate = (v, c) => `${fmtRate(v)} CLP/${c}`;
     const fFee = (v) => `${fmt(v)} CLP`;
+    const fMethod = (r) => `${r.categoria_recaudacion || 'N/D'} / ${r.categoria_dispersion || 'N/D'}`;
+    const getFee = (r) => (r.fee_base || 0) + (r.fee_impuesto || 0);
 
     // 1. Global Bests
     const bestTc = validData.filter(r => r.tasa_cambio_final > 0).reduce((prev, curr) => curr.tasa_cambio_final < prev.tasa_cambio_final ? curr : prev, {tasa_cambio_final: Infinity});
     const bestNorm = validData.filter(r => r.tasa_cambio_normalizada > 0).reduce((prev, curr) => curr.tasa_cambio_normalizada < prev.tasa_cambio_normalizada ? curr : prev, {tasa_cambio_normalizada: Infinity});
-    const bestFee = validData.filter(r => r.fee_base >= 0).reduce((prev, curr) => curr.fee_base < prev.fee_base ? curr : prev, {fee_base: Infinity});
+    const bestFee = validData.filter(r => getFee(r) >= 0).reduce((prev, curr) => getFee(curr) < getFee(prev) ? curr : prev, {__fake: true, fee_base: Infinity, fee_impuesto: Infinity});
 
     // 2. AFEX Bests
     const afexData = validData.filter(r => r.agente.toUpperCase() === 'AFEX' || r.agente.toUpperCase().includes('AFEX'));
     
     const afexTc = afexData.filter(r => r.tasa_cambio_final > 0).reduce((prev, curr) => curr.tasa_cambio_final < prev.tasa_cambio_final ? curr : prev, {tasa_cambio_final: Infinity});
     const afexNorm = afexData.filter(r => r.tasa_cambio_normalizada > 0).reduce((prev, curr) => curr.tasa_cambio_normalizada < prev.tasa_cambio_normalizada ? curr : prev, {tasa_cambio_normalizada: Infinity});
-    const afexFee = afexData.filter(r => r.fee_base >= 0).reduce((prev, curr) => curr.fee_base < prev.fee_base ? curr : prev, {fee_base: Infinity});
+    const afexFee = afexData.filter(r => getFee(r) >= 0).reduce((prev, curr) => getFee(curr) < getFee(prev) ? curr : prev, {__fake: true, fee_base: Infinity, fee_impuesto: Infinity});
 
     // Populate Global Bests
     document.getElementById('val-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? fRate(bestTc.tasa_cambio_final, targetCurrency) : '-';
-    document.getElementById('sub-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? `Ofrecido por <strong>${bestTc.agente}</strong>` : '';
+    document.getElementById('sub-best-tc').innerHTML = bestTc.tasa_cambio_final !== Infinity ? `Ofrecido por <strong>${bestTc.agente}</strong><br>(${fMethod(bestTc)})` : '';
 
     document.getElementById('val-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? fRate(bestNorm.tasa_cambio_normalizada, targetCurrency) : '-';
-    document.getElementById('sub-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? `Ofrecido por <strong>${bestNorm.agente}</strong>` : '';
+    document.getElementById('sub-best-norm').innerHTML = bestNorm.tasa_cambio_normalizada !== Infinity ? `Ofrecido por <strong>${bestNorm.agente}</strong><br>(${fMethod(bestNorm)})` : '';
 
-    document.getElementById('val-best-fee').innerHTML = bestFee.fee_base !== Infinity ? fFee(bestFee.fee_base) : '-';
-    document.getElementById('sub-best-fee').innerHTML = bestFee.fee_base !== Infinity ? `Ofrecido por <strong>${bestFee.agente}</strong>` : '';
+    document.getElementById('val-best-fee').innerHTML = !bestFee.__fake ? fFee(getFee(bestFee)) : '-';
+    document.getElementById('sub-best-fee').innerHTML = !bestFee.__fake ? `Ofrecido por <strong>${bestFee.agente}</strong><br>(${fMethod(bestFee)})` : '';
 
     // Populate AFEX Bests
     document.getElementById('val-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? fRate(afexTc.tasa_cambio_final, targetCurrency) : '<span style="color:#aaa">N/A</span>';
-    document.getElementById('sub-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? `(${afexTc.metodo_recaudacion})` : '';
+    document.getElementById('sub-afex-tc').innerHTML = afexTc.tasa_cambio_final !== Infinity ? `${fMethod(afexTc)}` : '';
 
     document.getElementById('val-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? fRate(afexNorm.tasa_cambio_normalizada, targetCurrency) : '<span style="color:#aaa">N/A</span>';
-    document.getElementById('sub-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? `(${afexNorm.metodo_recaudacion})` : '';
+    document.getElementById('sub-afex-norm').innerHTML = afexNorm.tasa_cambio_normalizada !== Infinity ? `${fMethod(afexNorm)}` : '';
 
-    document.getElementById('val-afex-fee').innerHTML = afexFee.fee_base !== Infinity ? fFee(afexFee.fee_base) : '<span style="color:#aaa">N/A</span>';
-    document.getElementById('sub-afex-fee').innerHTML = afexFee.fee_base !== Infinity ? `(${afexFee.metodo_recaudacion})` : '';
+    document.getElementById('val-afex-fee').innerHTML = !afexFee.__fake ? fFee(getFee(afexFee)) : '<span style="color:#aaa">N/A</span>';
+    document.getElementById('sub-afex-fee').innerHTML = !afexFee.__fake ? `${fMethod(afexFee)}` : '';
 
     // Calculate Differences
     const domDiffTc = document.getElementById('val-diff-tc');
     const domDiffNorm = document.getElementById('val-diff-norm');
     const domDiffFee = document.getElementById('val-diff-fee');
 
-    function renderDiff(dom, afexVal, globalVal, suffix) {
-        if (afexVal === Infinity || globalVal === Infinity) {
+    function renderDiff(dom, afexVal, globalVal, suffix, bestAgentName) {
+        const subLabelDom = dom.nextElementSibling;
+        
+        if (afexVal === Infinity || globalVal === Infinity || isNaN(afexVal) || isNaN(globalVal)) {
             dom.innerHTML = '<span class="val-neutral">-</span>';
+            dom.removeAttribute('title');
+            if (subLabelDom) subLabelDom.innerText = 'Sin datos';
             return;
         }
-        const diff = afexVal - globalVal;
         
-        if (diff < 0.001 && diff > -0.001 && afexVal === globalVal) {
-            dom.innerHTML = '<span class="val-negative">🏆 Somos los mejores</span>';
+        const diff = afexVal - globalVal;
+        const tt = "Significa respecto al cliente:\n(+) MÁS CARO: AFEX cobra más pesos por la misma divisa.\n(-) MÁS BARATO: AFEX cobra menos pesos por la misma divisa.";
+        dom.setAttribute('title', tt);
+        
+        let valHtml;
+        if (Math.abs(diff) < 0.001) {
+            valHtml = `<span class="val-negative">0.00 ${suffix}</span>`;
+            if (subLabelDom) subLabelDom.innerText = `Somos el mejor mercado`;
         } else if (diff > 0) {
-            // AFEX es más caro (peor)
-            dom.innerHTML = `<span class="val-positive">+ ${fmtRate(Math.abs(diff))} ${suffix}</span>`;
+            // AFEX is worse (more expensive) -> Red
+            valHtml = `<span class="val-positive">+ ${fmtRate(diff)} ${suffix}</span>`;
+            if (subLabelDom) subLabelDom.innerText = `AFEX vs ${bestAgentName}`;
         } else {
-            // AFEX es más barato (mejor)
-            dom.innerHTML = `<span class="val-negative">- ${fmtRate(Math.abs(diff))} ${suffix}</span>`;
+            // AFEX is better (cheaper) -> Green
+            valHtml = `<span class="val-negative">- ${fmtRate(Math.abs(diff))} ${suffix}</span>`;
+            if (subLabelDom) subLabelDom.innerText = `AFEX vs ${bestAgentName}`;
         }
+        dom.innerHTML = valHtml;
     }
 
-    renderDiff(domDiffTc, afexTc.tasa_cambio_final, bestTc.tasa_cambio_final, `CLP/${targetCurrency}`);
-    renderDiff(domDiffNorm, afexNorm.tasa_cambio_normalizada, bestNorm.tasa_cambio_normalizada, `CLP/${targetCurrency}`);
-    renderDiff(domDiffFee, afexFee.fee_base, bestFee.fee_base, 'CLP');
+    renderDiff(domDiffTc, afexTc.tasa_cambio_final, bestTc.tasa_cambio_final, `CLP`, bestTc.agente);
+    renderDiff(domDiffNorm, afexNorm.tasa_cambio_normalizada, bestNorm.tasa_cambio_normalizada, `CLP`, bestNorm.agente);
+    renderDiff(domDiffFee, getFee(afexFee), getFee(bestFee), 'CLP', bestFee.agente);
 }
 
 function updateMeta(meta) {
