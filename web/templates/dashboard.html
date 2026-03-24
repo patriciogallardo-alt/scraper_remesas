@@ -113,17 +113,32 @@
             <section class="competitive-grid" id="stats-grid" style="display:none">
                 <!-- Row 1: Global Bests -->
                 <div class="comp-card" id="cc-best-tc">
-                    <div class="comp-label">Mejor TC Final Global <span data-tooltip="(Monto Enviado + Fee Total) / Monto Recibido">ⓘ</span></div>
+                    <div class="comp-label">
+                        Mejor TC Final Global
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="(Monto Enviado + Fee Total) / Monto Recibido">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </span>
+                    </div>
                     <div class="comp-value" id="val-best-tc">-</div>
                     <div class="comp-sub" id="sub-best-tc">Seleccione país</div>
                 </div>
                 <div class="comp-card" id="cc-best-norm">
-                    <div class="comp-label">Mejor TC Normalizado Global <span data-tooltip="Tasa de cambio pura ofrecida por el proveedor, sin considerar fees">ⓘ</span></div>
+                    <div class="comp-label">
+                        Mejor TC Normalizado Global
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Tasa de cambio pura ofrecida por el proveedor, sin considerar fees">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </span>
+                    </div>
                     <div class="comp-value" id="val-best-norm">-</div>
                     <div class="comp-sub" id="sub-best-norm">Seleccione país</div>
                 </div>
                 <div class="comp-card" id="cc-best-fee">
-                    <div class="comp-label">Menor Fee Final Global <span data-tooltip="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">ⓘ</span></div>
+                    <div class="comp-label">
+                        Menor Fee Final Global
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </span>
+                    </div>
                     <div class="comp-value" id="val-best-fee">-</div>
                     <div class="comp-sub" id="sub-best-fee">Seleccione país</div>
                 </div>
@@ -137,17 +152,32 @@
 
                 <!-- Row 2: AFEX Bests -->
                 <div class="comp-card comp-card--afex" id="cc-afex-tc">
-                    <div class="comp-label">Mejor TC Final AFEX <span data-tooltip="(Monto Enviado + Fee Total) / Monto Recibido">ⓘ</span></div>
+                    <div class="comp-label">
+                        Mejor TC Final AFEX
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="(Monto Enviado + Fee Total) / Monto Recibido">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </span>
+                    </div>
                     <div class="comp-value" id="val-afex-tc">-</div>
                     <div class="comp-sub" id="sub-afex-tc"></div>
                 </div>
                 <div class="comp-card comp-card--afex" id="cc-afex-norm">
-                    <div class="comp-label">Mejor TC Normalizado AFEX <span data-tooltip="Tasa de cambio pura ofrecida por AFEX, sin considerar fees">ⓘ</span></div>
+                    <div class="comp-label">
+                        Mejor TC Normalizado AFEX
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Tasa de cambio pura ofrecida por AFEX, sin considerar fees">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </span>
+                    </div>
                     <div class="comp-value" id="val-afex-norm">-</div>
                     <div class="comp-sub" id="sub-afex-norm"></div>
                 </div>
                 <div class="comp-card comp-card--afex" id="cc-afex-fee">
-                    <div class="comp-label">Menor Fee Final AFEX <span data-tooltip="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">ⓘ</span></div>
+                    <div class="comp-label">
+                        Menor Fee Final AFEX
+                        <span style="display:inline-flex;align-items:center;margin-left:4px;" data-tooltip="Costo Total Fijo de envío (Fee Base + Fee Impuesto)">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </span>
+                    </div>
                     <div class="comp-value" id="val-afex-fee">-</div>
                     <div class="comp-sub" id="sub-afex-fee"></div>
                 </div>

@@ -396,8 +396,8 @@ function updateStats(data, countryFilter) {
     const fMethod = (r) => {
         if (!r) return 'Sin datos';
         let text = `Ofrecido por <strong>${r.agente}</strong><br>`;
-        text += `<span style="color:var(--text-muted)">Recaudación:</span> ${r.metodo_recaudacion || 'N/D'}<br>`;
-        text += `<span style="color:var(--text-muted)">Dispersión:</span> ${r.metodo_dispersion || 'N/D'}`;
+        text += `<span style="color:var(--text-muted)">Recaudación:</span> ${r.categoria_recaudacion || 'N/D'}<br>`;
+        text += `<span style="color:var(--text-muted)">Dispersión:</span> ${r.categoria_dispersion || 'N/D'}`;
         
         if (r.agente === 'AFEX' && r.metodo_dispersion) {
             const match = r.metodo_dispersion.match(/\((.*?)\)/);
@@ -478,7 +478,20 @@ function updateStats(data, countryFilter) {
 
     renderDiff(domDiffTc, afexTc.tasa_cambio_final, bestTc.tasa_cambio_final, `CLP`, bestTc.agente);
     renderDiff(domDiffNorm, afexNorm.tasa_cambio_normalizada, bestNorm.tasa_cambio_normalizada, `CLP`, bestNorm.agente);
-    renderDiff(domDiffFee, getFee(afexFee), getFee(bestFee), 'CLP', bestFee.agente);
+    
+    // Fee Diff (Zero decimals)
+    const feeAfex = getFee(afexFee);
+    const feeBest = getFee(bestFee);
+    if (!feeAfex || !feeBest) {
+        domDiffFee.innerHTML = '-';
+        domDiffFee.className = 'comp-value';
+    } else {
+        const d = feeAfex - feeBest;
+        // Positive if AFEX is more expensive (worse), negative if AFEX is cheaper (better)
+        const signStr = d > 0 ? '+' : (d < 0 ? '' : '');
+        const cClass = d === 0 ? 'diff-neutral' : (d < 0 ? 'diff-positive' : 'diff-negative');
+        domDiffFee.innerHTML = `<span class="${cClass}">${signStr}${fmt(d)} CLP</span><div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">vs ${bestFee.agente}</div>`;
+    }
 }
 
 function updateMeta(meta) {
