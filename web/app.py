@@ -301,6 +301,17 @@ def init_scheduler():
             id="scraper_diario",
             replace_existing=True
         )
+
+        # Job temporal de prueba: 10:15
+        scheduler.add_job(
+            func=background_scrape,
+            trigger="cron",
+            hour="10",
+            minute="23",
+            id="scraper_prueba_1015",
+            replace_existing=True
+        )
+        
         scheduler.start()
         
         # Log all registered jobs for verification
