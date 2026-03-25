@@ -934,3 +934,54 @@ tr:hover td {
     display: flex;
     gap: 4px;
 }
+
+/* ===== Compare Toggle ===== */
+.compare-toggle-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+}
+
+.compare-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.compare-toggle-group {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.compare-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.compare-btn:hover {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue-light);
+}
+
+.compare-btn.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
