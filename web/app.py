@@ -301,6 +301,7 @@ def init_scheduler():
             id="scraper_diario",
             replace_existing=True
         )
+        
         scheduler.start()
         
         # Log all registered jobs for verification
