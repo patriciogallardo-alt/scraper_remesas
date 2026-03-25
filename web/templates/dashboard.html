@@ -132,18 +132,19 @@
                 </div>
             </section>
 
+            <!-- Comparison Mode Toggle -->
+            <div class="compare-toggle-bar" id="compare-toggle" style="display:none">
+                <span class="compare-label">Comparar por:</span>
+                <div class="compare-toggle-group">
+                    <button class="compare-btn active" onclick="setCompareMode('independent')" data-mode="independent">Independiente</button>
+                    <button class="compare-btn" onclick="setCompareMode('tc_final')" data-mode="tc_final">TC Final</button>
+                    <button class="compare-btn" onclick="setCompareMode('tc_norm')" data-mode="tc_norm">TC Normalizado</button>
+                    <button class="compare-btn" onclick="setCompareMode('tarifa')" data-mode="tarifa">Tarifa</button>
+                </div>
+            </div>
+
             <!-- COMPETITIVE STATS (shows when country is filtered) -->
             <section class="competitive-grid" id="stats-grid" style="display:none">
-                <!-- Comparison Mode Toggle -->
-                <div class="compare-toggle-bar comp-card--span3">
-                    <span class="compare-label">Comparar por:</span>
-                    <div class="compare-toggle-group">
-                        <button class="compare-btn active" onclick="setCompareMode('independent')" data-mode="independent">Independiente</button>
-                        <button class="compare-btn" onclick="setCompareMode('tc_final')" data-mode="tc_final">TC Final</button>
-                        <button class="compare-btn" onclick="setCompareMode('tc_norm')" data-mode="tc_norm">TC Normalizado</button>
-                        <button class="compare-btn" onclick="setCompareMode('tarifa')" data-mode="tarifa">Tarifa</button>
-                    </div>
-                </div>
                 <!-- Row 1: Global Bests -->
                 <div class="comp-card" id="cc-best-tc">
                     <div class="comp-label">

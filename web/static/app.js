@@ -298,12 +298,14 @@ function renderTable() {
     const tableContainer = document.getElementById('table-container');
     const statsGrid = document.getElementById('stats-grid');
     const globalSummary = document.getElementById('global-summary');
+    const compareToggle = document.getElementById('compare-toggle');
 
     // Show stats only when country filter is active
     const countryFilter = document.getElementById('filter-country').value;
 
     if (countryFilter) {
         statsGrid.style.display = '';
+        if (compareToggle) compareToggle.style.display = '';
         if (globalSummary) globalSummary.style.display = 'none';
         updateStats(filtered, countryFilter);
         
@@ -314,6 +316,7 @@ function renderTable() {
         }
     } else {
         statsGrid.style.display = 'none';
+        if (compareToggle) compareToggle.style.display = 'none';
         if (globalSummary) globalSummary.style.display = 'block';
     }
 
