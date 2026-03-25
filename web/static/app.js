@@ -3,6 +3,12 @@ let allData = [];
 let sortCol = null;
 let sortAsc = true;
 
+// Pagination state
+let currentPage = 1;
+let rowsPerPage = 50;
+let totalPages = 1;
+let lastSortedData = []; // Cached sorted data for pagination navigation
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
@@ -161,6 +167,7 @@ function renderHistoryChart(data) {
 }
 
 function onCountryChange() {
+    currentPage = 1;
     // When country changes, update currency filter options to match
     const country = document.getElementById('filter-country').value;
     if (country) {
@@ -331,7 +338,17 @@ function renderTable() {
         });
     }
 
-    tbody.innerHTML = data.map(r => `
+    // Cache sorted data for pagination
+    lastSortedData = data;
+    totalPages = Math.ceil(data.length / rowsPerPage);
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    // Paginate
+    const start = (currentPage - 1) * rowsPerPage;
+    const pageData = data.slice(start, start + rowsPerPage);
+
+    tbody.innerHTML = pageData.map(r => `
         <tr>
             <td><span class="agent-badge ${agentClass(r.agente)}">${r.agente}</span></td>
             <td>${r.pais_destino}</td>
@@ -351,6 +368,8 @@ function renderTable() {
             <td>${r.timestamp || ''}</td>
         </tr>
     `).join('');
+
+    renderPagination(data.length);
 }
 
 function sortTable(colIndex) {
@@ -367,6 +386,54 @@ function sortTable(colIndex) {
         if (arrow) arrow.textContent = i === sortCol ? (sortAsc ? '▲' : '▼') : '';
     });
 
+    renderTable();
+}
+
+// ===== Pagination Controls =====
+function renderPagination(totalRecords) {
+    const bar = document.getElementById('pagination-bar');
+    if (!bar) return;
+    
+    if (totalRecords <= rowsPerPage) {
+        bar.style.display = 'none';
+        return;
+    }
+    bar.style.display = 'flex';
+
+    const start = (currentPage - 1) * rowsPerPage + 1;
+    const end = Math.min(currentPage * rowsPerPage, totalRecords);
+    document.getElementById('pagination-summary').textContent = `Mostrando ${start}-${end} de ${totalRecords.toLocaleString('es-CL')} registros`;
+
+    document.getElementById('page-first').disabled = currentPage <= 1;
+    document.getElementById('page-prev').disabled = currentPage <= 1;
+    document.getElementById('page-next').disabled = currentPage >= totalPages;
+    document.getElementById('page-last').disabled = currentPage >= totalPages;
+
+    // Page number buttons
+    const numContainer = document.getElementById('page-numbers');
+    let pages = [];
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(`<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`);
+    }
+    numContainer.innerHTML = pages.join('');
+}
+
+window.goToPage = function(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderTable();
+    // Scroll table to top
+    document.querySelector('.table-scroll')?.scrollTo(0, 0);
+}
+
+window.changePageSize = function(size) {
+    rowsPerPage = parseInt(size, 10);
+    currentPage = 1;
     renderTable();
 }
 
@@ -673,7 +740,7 @@ window.updateMsText = function(id, trigger = true) {
     } else {
         btn.innerText = `${checked} seleccionado${checked>1?'s':''}`;
     }
-    if (trigger && window._isReady) renderTable(); 
+    if (trigger && window._isReady) { currentPage = 1; renderTable(); }
 }
 
 function getMsValues(id) {

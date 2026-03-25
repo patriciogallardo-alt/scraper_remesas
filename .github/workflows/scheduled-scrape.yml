@@ -2,20 +2,21 @@ name: Scheduled Scraper Trigger
 
 on:
   schedule:
-    # Horarios en UTC (Chile = UTC-3 en horario estándar, UTC-4 en verano)
-    # Chile actualmente en UTC-3, así que:
-    # 09:00 Chile = 12:00 UTC
-    # 11:00 Chile = 14:00 UTC
-    # 13:00 Chile = 16:00 UTC
-    # 16:00 Chile = 19:00 UTC
-    # 18:00 Chile = 21:00 UTC
-    # 20:00 Chile = 23:00 UTC
-    - cron: '0 12 * * 1-5'  # 09:00 Chile (Lun-Vie)
-    - cron: '0 14 * * 1-5'  # 11:00 Chile
-    - cron: '0 16 * * 1-5'  # 13:00 Chile
-    - cron: '0 19 * * 1-5'  # 16:00 Chile
-    - cron: '0 21 * * 1-5'  # 18:00 Chile
-    - cron: '0 23 * * 1-5'  # 20:00 Chile
+    # Horarios en UTC (Chile = UTC-3 en horario estándar)
+    # Se ejecutan 5 minutos ANTES de la hora objetivo para
+    # darle tiempo a Railway de despertar el contenedor.
+    # 08:55 Chile = 11:55 UTC  (para scrape de las 09:00)
+    # 10:55 Chile = 13:55 UTC  (para scrape de las 11:00)
+    # 12:55 Chile = 15:55 UTC  (para scrape de las 13:00)
+    # 15:55 Chile = 18:55 UTC  (para scrape de las 16:00)
+    # 17:55 Chile = 20:55 UTC  (para scrape de las 18:00)
+    # 19:55 Chile = 22:55 UTC  (para scrape de las 20:00)
+    - cron: '55 11 * * 1-5'  # 08:55 Chile (Lun-Vie)
+    - cron: '55 13 * * 1-5'  # 10:55 Chile
+    - cron: '55 15 * * 1-5'  # 12:55 Chile
+    - cron: '55 18 * * 1-5'  # 15:55 Chile
+    - cron: '55 20 * * 1-5'  # 17:55 Chile
+    - cron: '55 22 * * 1-5'  # 19:55 Chile
   workflow_dispatch:  # Permite ejecución manual desde GitHub
 
 jobs:

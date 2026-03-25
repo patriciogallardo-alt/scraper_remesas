@@ -67,12 +67,11 @@
                         Período
                     </label>
                     <select class="filter-select" id="filter-days" onchange="loadData()">
-                        <option value="0">Data más reciente</option>
-                        <option value="1">Últimas 24h</option>
-                        <option value="3">Últimos 3 días</option>
-                        <option value="7">Últimos 7 días</option>
+                        <option value="3" selected>Últimos 3 días</option>
+                        <option value="7">Última semana</option>
                         <option value="14">Últimas 2 semanas</option>
                         <option value="30">Último mes</option>
+                        <option value="365">Todo</option>
                     </select>
                 </div>
             </div>
@@ -272,6 +271,27 @@
                     </thead>
                     <tbody id="table-body"></tbody>
                 </table>
+            </div>
+            <!-- Pagination -->
+            <div class="pagination-bar" id="pagination-bar" style="display:none">
+                <div class="pagination-info">
+                    <span id="pagination-summary">Mostrando 0 de 0</span>
+                </div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn" id="page-first" onclick="goToPage(1)" title="Primera página">«</button>
+                    <button class="pagination-btn" id="page-prev" onclick="goToPage(currentPage - 1)" title="Anterior">‹</button>
+                    <span class="pagination-pages" id="page-numbers"></span>
+                    <button class="pagination-btn" id="page-next" onclick="goToPage(currentPage + 1)" title="Siguiente">›</button>
+                    <button class="pagination-btn" id="page-last" onclick="goToPage(totalPages)" title="Última página">»</button>
+                </div>
+                <div class="pagination-size">
+                    <label>Filas:</label>
+                    <select id="rows-per-page" onchange="changePageSize(this.value)">
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                    </select>
+                </div>
             </div>
         </section>
 
