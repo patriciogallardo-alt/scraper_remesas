@@ -277,24 +277,49 @@ def background_scrape(is_manual=False):
         scraping_status["running"] = False
 
 # ===== Configuración de Cron (Chile) =====
-def init_scheduler():
-    santiago_tz = pytz.timezone('America/Santiago')
-    scheduler = BackgroundScheduler(timezone=santiago_tz)
-    
-    # Horarios acordados: 09:00, 11:00, 13:00, 16:00, 18:00, 20:00
-    scheduler.add_job(
-        func=background_scrape,
-        trigger="cron",
-        hour="9,11,13,16,18,20",
-        minute="0",
-        id="scraper_diario",
-        replace_existing=True
-    )
-    scheduler.start()
-    logging.info("APScheduler iniciado. Ejecuciones programadas a las 9, 11, 13, 16, 18 y 20 horas (Hora Chile).")
+_scheduler_started = False
+_scheduler_lock = threading.Lock()
 
-# Iniciar el scheduler si no estamos en una ejecución de re-carga de dev
-if not os.getenv("WERKZEUG_RUN_MAIN"):
+def init_scheduler():
+    global _scheduler_started
+    with _scheduler_lock:
+        if _scheduler_started:
+            logging.info("Scheduler ya fue iniciado, omitiendo.")
+            return
+        _scheduler_started = True
+    
+    try:
+        santiago_tz = pytz.timezone('America/Santiago')
+        scheduler = BackgroundScheduler(timezone=santiago_tz)
+        
+        # Horarios acordados: 09:00, 11:00, 13:00, 16:00, 18:00, 20:00
+        scheduler.add_job(
+            func=background_scrape,
+            trigger="cron",
+            hour="9,11,13,16,18,20",
+            minute="0",
+            id="scraper_diario",
+            replace_existing=True
+        )
+        scheduler.start()
+        
+        # Log all registered jobs for verification
+        jobs = scheduler.get_jobs()
+        logging.info(f"APScheduler iniciado exitosamente con {len(jobs)} trabajo(s) registrado(s).")
+        for job in jobs:
+            logging.info(f"  Job: {job.id} | Próxima ejecución: {job.next_run_time}")
+    except Exception as e:
+        logging.error(f"Error al iniciar APScheduler: {e}")
+        _scheduler_started = False
+
+# Iniciar el scheduler:
+# - En Gunicorn: WERKZEUG_RUN_MAIN no existe, se inicia al importar el módulo
+# - En Flask dev: Solo se inicia en el proceso child (donde WERKZEUG_RUN_MAIN='true')
+#   para evitar doble ejecución con el reloader
+is_gunicorn = "gunicorn" in os.environ.get("SERVER_SOFTWARE", "")
+is_flask_main = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+
+if is_gunicorn or is_flask_main or not os.environ.get("WERKZEUG_RUN_MAIN"):
     init_scheduler()
 
 
