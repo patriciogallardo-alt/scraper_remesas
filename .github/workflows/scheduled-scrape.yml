@@ -1,0 +1,55 @@
+name: Scheduled Scraper Trigger
+
+on:
+  schedule:
+    # Horarios en UTC (Chile = UTC-3 en horario estándar, UTC-4 en verano)
+    # Chile actualmente en UTC-3, así que:
+    # 09:00 Chile = 12:00 UTC
+    # 11:00 Chile = 14:00 UTC
+    # 13:00 Chile = 16:00 UTC
+    # 16:00 Chile = 19:00 UTC
+    # 18:00 Chile = 21:00 UTC
+    # 20:00 Chile = 23:00 UTC
+    - cron: '0 12 * * 1-5'  # 09:00 Chile (Lun-Vie)
+    - cron: '0 14 * * 1-5'  # 11:00 Chile
+    - cron: '0 16 * * 1-5'  # 13:00 Chile
+    - cron: '0 19 * * 1-5'  # 16:00 Chile
+    - cron: '0 21 * * 1-5'  # 18:00 Chile
+    - cron: '0 23 * * 1-5'  # 20:00 Chile
+  workflow_dispatch:  # Permite ejecución manual desde GitHub
+
+jobs:
+  trigger-scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Trigger Scraper
+        run: |
+          echo "Triggering scraper at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            "${{ secrets.RAILWAY_APP_URL }}/api/scrape")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 409 ]; then
+            echo "✅ Scraper triggered successfully or already running"
+          else
+            echo "❌ Failed to trigger scraper"
+            exit 1
+          fi
+
+      - name: Wait for completion
+        run: |
+          echo "Waiting 30 seconds for the service to start processing..."
+          sleep 30
+          
+          STATUS=$(curl -s "${{ secrets.RAILWAY_APP_URL }}/api/status")
+          echo "Scraper status: $STATUS"
