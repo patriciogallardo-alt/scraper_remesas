@@ -36,6 +36,18 @@
         </div>
     </header>
 
+    <!-- SCRAPE STATUS BAR -->
+    <div class="scrape-status-bar" id="scrape-status-bar" style="display:none">
+        <div class="scrape-status-content">
+            <div class="scrape-status-icon" id="scrape-status-icon">
+                <span class="loading-spinner" style="width:16px;height:16px;border-width:2px"></span>
+            </div>
+            <span class="scrape-status-text" id="scrape-status-text">Ejecutando scrapers...</span>
+            <span class="scrape-status-timer" id="scrape-status-timer"></span>
+        </div>
+        <button class="scrape-status-close" id="scrape-status-close" onclick="dismissStatusBar()" style="display:none">&times;</button>
+    </div>
+
     <!-- MAIN -->
     <main class="main">
     

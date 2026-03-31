@@ -221,6 +221,102 @@ async function loadData() {
     }
 }
 
+// ===== Scrape Status Bar System =====
+let _scrapePollingInterval = null;
+let _scrapeTimerInterval = null;
+let _scrapeStartTime = null;
+
+function showStatusBar(message) {
+    const bar = document.getElementById('scrape-status-bar');
+    const text = document.getElementById('scrape-status-text');
+    const icon = document.getElementById('scrape-status-icon');
+    const closeBtn = document.getElementById('scrape-status-close');
+    
+    bar.style.display = 'flex';
+    bar.className = 'scrape-status-bar'; // Reset classes
+    text.textContent = message;
+    icon.innerHTML = '<span class="loading-spinner" style="width:16px;height:16px;border-width:2px"></span>';
+    closeBtn.style.display = 'none';
+    
+    // Start elapsed timer
+    _scrapeStartTime = Date.now();
+    clearInterval(_scrapeTimerInterval);
+    const timerEl = document.getElementById('scrape-status-timer');
+    _scrapeTimerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - _scrapeStartTime) / 1000);
+        const min = Math.floor(elapsed / 60);
+        const sec = elapsed % 60;
+        timerEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function updateStatusBarDone(message) {
+    const bar = document.getElementById('scrape-status-bar');
+    const text = document.getElementById('scrape-status-text');
+    const icon = document.getElementById('scrape-status-icon');
+    const closeBtn = document.getElementById('scrape-status-close');
+    
+    bar.className = 'scrape-status-bar done';
+    text.textContent = message;
+    icon.innerHTML = '✅';
+    closeBtn.style.display = 'block';
+    
+    // Stop timer
+    clearInterval(_scrapeTimerInterval);
+}
+
+function updateStatusBarError(message) {
+    const bar = document.getElementById('scrape-status-bar');
+    const text = document.getElementById('scrape-status-text');
+    const icon = document.getElementById('scrape-status-icon');
+    const closeBtn = document.getElementById('scrape-status-close');
+    
+    bar.className = 'scrape-status-bar error';
+    text.textContent = message;
+    icon.innerHTML = '❌';
+    closeBtn.style.display = 'block';
+    
+    clearInterval(_scrapeTimerInterval);
+}
+
+window.dismissStatusBar = function() {
+    document.getElementById('scrape-status-bar').style.display = 'none';
+    clearInterval(_scrapePollingInterval);
+    clearInterval(_scrapeTimerInterval);
+    _scrapePollingInterval = null;
+}
+
+function startScrapePolling() {
+    clearInterval(_scrapePollingInterval);
+    _scrapePollingInterval = setInterval(async () => {
+        try {
+            const resp = await fetch('/api/status');
+            const status = await resp.json();
+            
+            if (!status.running) {
+                // Scraping finished
+                clearInterval(_scrapePollingInterval);
+                _scrapePollingInterval = null;
+                
+                const btn = document.getElementById('btn-scrape');
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Ejecutar Scraping';
+                
+                if (status.message && status.message.includes('Error')) {
+                    updateStatusBarError(status.message);
+                } else {
+                    updateStatusBarDone(status.message || 'Scraping completado exitosamente');
+                    // Auto-reload data
+                    await loadData();
+                    showToast('Datos actualizados automáticamente', 'success');
+                }
+            }
+        } catch (e) {
+            console.error('Error polling status:', e);
+        }
+    }, 10000); // Poll every 10 seconds
+}
+
 async function triggerScrape() {
     // Prompt for amount with default
     const rawAmount = prompt('Monto a cotizar (CLP):', '100000');
@@ -235,9 +331,7 @@ async function triggerScrape() {
     const btn = document.getElementById('btn-scrape');
     btn.disabled = true;
     const fmtAmount = amount.toLocaleString('es-CL');
-    btn.innerHTML = `<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></span> Ejecutando (${fmtAmount} CLP)...`;
-
-    showLoading(true);
+    btn.innerHTML = `<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></span> Ejecutando...`;
 
     try {
         const resp = await fetch('/api/scrape', { 
@@ -248,19 +342,21 @@ async function triggerScrape() {
         const json = await resp.json();
 
         if (json.status === 'started') {
-            showToast(json.message || 'Scraping en proceso', 'success');
-        } else if (json.status === 'ok') {
-            showToast(`${json.total_quotes} cotizaciones en ${json.duration}s`, 'success');
-            await loadData();
+            showStatusBar(`Scraping en ejecución (${fmtAmount} CLP) — Los datos se actualizarán automáticamente al finalizar`);
+            startScrapePolling();
+        } else if (json.status === 'busy') {
+            showToast(json.message || 'Scraping ya en ejecución', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Ejecutar Scraping';
         } else {
             showToast(json.message || 'Error al ejecutar', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Ejecutar Scraping';
         }
     } catch (e) {
         showToast('Error de conexión', 'error');
-    } finally {
         btn.disabled = false;
         btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Ejecutar Scraping';
-        showLoading(false);
     }
 }
 

@@ -1023,3 +1023,72 @@ tr:hover td {
     font-weight: 600;
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
+
+/* ===== Scrape Status Bar ===== */
+.scrape-status-bar {
+    position: sticky;
+    top: 60px;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 2rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+    border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+    backdrop-filter: blur(12px);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.scrape-status-bar.done {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1));
+    border-bottom-color: rgba(34, 197, 94, 0.25);
+}
+
+.scrape-status-bar.error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+    border-bottom-color: rgba(239, 68, 68, 0.25);
+}
+
+.scrape-status-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.scrape-status-icon {
+    display: flex;
+    align-items: center;
+}
+
+.scrape-status-text {
+    color: var(--text-primary);
+}
+
+.scrape-status-timer {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.scrape-status-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.2s;
+}
+
+.scrape-status-close:hover {
+    color: var(--text-primary);
+}
