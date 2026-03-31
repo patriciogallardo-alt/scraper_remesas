@@ -873,27 +873,13 @@ function updateMeta(meta) {
         }
     }
     
-    // Last 2 scrape amounts
+    // Last 2 scrape amounts (Fixed globally from backend metadata)
     const domLastAmts = document.getElementById('global-last-amounts');
     if (domLastAmts) {
-        // Find distinct monto_enviado grouped by unique timestamps (descending)
-        const runs = new Map();
-        const sortedData = [...allData].sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-        
-        for (const row of sortedData) {
-            if (row.timestamp && row.monto_enviado != null) {
-                if (!runs.has(row.timestamp)) {
-                    runs.set(row.timestamp, row.monto_enviado);
-                }
-            }
-        }
-        const uniqueAmounts = Array.from(runs.values());
-        
-        // Make the amounts visually ordered by recency
-        if (uniqueAmounts.length >= 2) {
-            domLastAmts.innerText = `$${uniqueAmounts[0].toLocaleString('es-CL')} y $${uniqueAmounts[1].toLocaleString('es-CL')}`;
-        } else if (uniqueAmounts.length === 1) {
-            domLastAmts.innerText = `$${uniqueAmounts[0].toLocaleString('es-CL')}`;
+        if (meta.last_2_amounts && meta.last_2_amounts.length >= 2) {
+            domLastAmts.innerText = `$${meta.last_2_amounts[0].toLocaleString('es-CL')} y $${meta.last_2_amounts[1].toLocaleString('es-CL')}`;
+        } else if (meta.last_2_amounts && meta.last_2_amounts.length === 1) {
+            domLastAmts.innerText = `$${meta.last_2_amounts[0].toLocaleString('es-CL')}`;
         } else {
             domLastAmts.innerText = 'N/D';
         }

@@ -120,8 +120,29 @@ def fetch_latest_from_supabase():
         logging.error(f"Error cargando de Supabase: {e}")
         return None
 
-def fetch_last_n_runs_from_supabase(n_runs=2):
-    """Obtiene los últimos N bloques distintos de scraping consecutivos."""
+def get_last_2_amounts_from_supabase():
+    """Obtiene el 'monto_enviado' de las últimas 2 corridas distintas para la tarjeta global."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return []
+    url = f"{SUPABASE_URL}/rest/v1/remittance_quotes?select=timestamp_scrape,monto_enviado&order=timestamp_scrape.desc&limit=2000"
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if not resp.ok: return []
+        runs = {}
+        for row in resp.json():
+            ts = row.get("timestamp_scrape")
+            amt = row.get("monto_enviado")
+            if ts and amt is not None and ts not in runs:
+                runs[ts] = amt
+            if len(runs) == 2:
+                break
+        return list(runs.values())
+    except:
+        return []
+
+def fetch_penultima_from_supabase():
+    """Obtiene exclusivamente el bloque de datos de la penúltima (2da más reciente) cotización."""
     if not SUPABASE_URL or not SUPABASE_KEY:
         return None
         
@@ -133,7 +154,7 @@ def fetch_last_n_runs_from_supabase(n_runs=2):
     }
     
     try:
-        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=3000"
+        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=2000"
         ts_resp = requests.get(ts_url, headers=headers, timeout=15)
         if not ts_resp.ok or not ts_resp.json():
             return None
@@ -143,15 +164,16 @@ def fetch_last_n_runs_from_supabase(n_runs=2):
         for ts in all_ts:
             if ts not in unique_ts:
                 unique_ts.append(ts)
-            if len(unique_ts) == n_runs:
+            if len(unique_ts) == 2:
                 break
                 
-        if not unique_ts:
-            return None
+        if len(unique_ts) < 2:
+            return None # No hay penúltima cotización
             
-        # Get data for these specific timestamps
-        ts_list_str = ",".join([f'"{ts}"' for ts in unique_ts])
-        data_url = f"{url}?timestamp_scrape=in.({ts_list_str})&order=timestamp_scrape.desc"
+        penultima_ts = unique_ts[1]
+        
+        # Get data for THIS specific timestamp
+        data_url = f"{url}?timestamp_scrape=eq.{penultima_ts}"
         data_headers = {**headers, "Range": "0-9999"}
         data_resp = requests.get(data_url, headers=data_headers, timeout=20)
         
@@ -165,13 +187,13 @@ def fetch_last_n_runs_from_supabase(n_runs=2):
         return {
             "results": results,
             "metadata": {
-                "timestamp": unique_ts[0], # Most recent timestamp block
+                "timestamp": penultima_ts,
                 "total_quotes": len(results),
                 "duration_seconds": "N/D (Nube)"
             }
         }
     except Exception as e:
-        logging.error(f"Error multi-bloque en Supabase: {e}")
+        logging.error(f"Error fetching penultima from Supabase: {e}")
         return None
 
 def fetch_range_from_supabase(days):
@@ -294,19 +316,22 @@ def dashboard():
 def get_data():
     days = request.args.get('days', 0, type=int)
     
+    last_2_amounts = get_last_2_amounts_from_supabase()
+    
     if days > 0:
         total_count = fetch_total_count_from_supabase(days)
         supabase_data = fetch_range_from_supabase(days)
-    elif days == -2:
-        supabase_data = fetch_last_n_runs_from_supabase(2)
+    elif days == -1: # Penúltima cotización
+        supabase_data = fetch_penultima_from_supabase()
         total_count = len(supabase_data.get("results", [])) if supabase_data else 0
     else:
         supabase_data = fetch_latest_from_supabase()
         # For "latest quote" mode, count = number of results in the latest batch
         total_count = len(supabase_data.get("results", [])) if supabase_data else 0
 
-    if supabase_data and supabase_data["results"]:
+    if supabase_data and supabase_data.get("results"):
         supabase_data["metadata"]["total_count"] = total_count
+        supabase_data["metadata"]["last_2_amounts"] = last_2_amounts
         return jsonify(supabase_data)
 
     # Fallback al archivo local si falla
