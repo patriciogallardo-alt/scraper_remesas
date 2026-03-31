@@ -558,7 +558,7 @@ class AfexScraper(BaseScraper):
                         fee_suggested = fees.get("suggested", 0)
                         fee_base = fee_total
                         fee_tax = max(0, fee_suggested - fee_total)
-                        total_charged = payment.get("amount", SEND_AMOUNT_CLP + fee_total)
+                        total_charged = payment.get("amount", self.amount + fee_total)
 
                         conversion = quote.get("conversionInfo", {})
                         received = float(receive.get("amount", 0))
@@ -568,7 +568,7 @@ class AfexScraper(BaseScraper):
                         ):
                             exchange_rate = float(conversion["targetAmount"])
                         elif received > 0:
-                            exchange_rate = float(SEND_AMOUNT_CLP) / received
+                            exchange_rate = float(self.amount) / received
                         else:
                             exchange_rate = 0.0
 
@@ -672,7 +672,7 @@ class AfexScraper(BaseScraper):
                         fee_suggested = fees.get("suggested", 0)
                         fee_base = fee_total
                         fee_tax = max(0, fee_suggested - fee_total)
-                        total_charged = payment.get("amount", SEND_AMOUNT_CLP + fee_total)
+                        total_charged = payment.get("amount", self.amount + fee_total)
 
                         conversion = quote.get("conversionInfo", {})
                         received = float(receive.get("amount", 0))
@@ -682,7 +682,7 @@ class AfexScraper(BaseScraper):
                         ):
                             exchange_rate = float(conversion["targetAmount"])
                         elif received > 0:
-                            exchange_rate = float(SEND_AMOUNT_CLP) / received
+                            exchange_rate = float(self.amount) / received
                         else:
                             exchange_rate = 0.0
 
@@ -784,7 +784,7 @@ class AfexScraper(BaseScraper):
                         fee_suggested = fees.get("suggested", 0)
                         fee_base = fee_total
                         fee_tax = max(0, fee_suggested - fee_total)
-                        total_charged = payment.get("amount", SEND_AMOUNT_CLP + fee_total)
+                        total_charged = payment.get("amount", self.amount + fee_total)
 
                         conversion = quote.get("conversionInfo", {})
                         received = float(receive.get("amount", 0))
@@ -794,7 +794,7 @@ class AfexScraper(BaseScraper):
                         ):
                             exchange_rate = float(conversion["targetAmount"])
                         elif received > 0:
-                            exchange_rate = float(SEND_AMOUNT_CLP) / received
+                            exchange_rate = float(self.amount) / received
                         else:
                             exchange_rate = 0.0
 
