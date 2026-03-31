@@ -216,14 +216,29 @@ async function loadData() {
 }
 
 async function triggerScrape() {
+    // Prompt for amount with default
+    const rawAmount = prompt('Monto a cotizar (CLP):', '100000');
+    if (rawAmount === null) return; // Cancelled
+    
+    const amount = parseInt(rawAmount.replace(/\D/g, ''), 10);
+    if (!amount || amount <= 0) {
+        showToast('Monto inválido', 'error');
+        return;
+    }
+
     const btn = document.getElementById('btn-scrape');
     btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></span> Ejecutando...';
+    const fmtAmount = amount.toLocaleString('es-CL');
+    btn.innerHTML = `<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></span> Ejecutando (${fmtAmount} CLP)...`;
 
     showLoading(true);
 
     try {
-        const resp = await fetch('/api/scrape', { method: 'POST' });
+        const resp = await fetch('/api/scrape', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: amount })
+        });
         const json = await resp.json();
 
         if (json.status === 'started') {

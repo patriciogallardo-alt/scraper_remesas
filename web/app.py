@@ -250,13 +250,20 @@ def download_excel():
     )
 
 
-def background_scrape(is_manual=False):
+def background_scrape(is_manual=False, amount=None):
     global scraping_status
     if not is_manual:
         if scraping_status.get("running", False):
             logging.info("Scraping ya en ejecución, saltando tarea programada.")
             return
         scraping_status["running"] = True
+        
+    # Override amount if provided (manual scrape with custom amount)
+    import src.config as config_module
+    original_amount = config_module.SEND_AMOUNT_CLP
+    if amount is not None:
+        config_module.SEND_AMOUNT_CLP = int(amount)
+        logging.info(f"Monto personalizado para scraping: {config_module.SEND_AMOUNT_CLP:,} CLP")
         
     try:
         loop = asyncio.new_event_loop()
@@ -274,6 +281,8 @@ def background_scrape(is_manual=False):
         scraping_status["message"] = f"Error: {str(e)}"
         logging.error(f"Background scrape failed: {e}")
     finally:
+        # Restore original amount
+        config_module.SEND_AMOUNT_CLP = original_amount
         scraping_status["running"] = False
 
 # ===== Configuración de Cron (Chile) =====
@@ -343,16 +352,22 @@ def trigger_scrape():
     if scraping_status["running"]:
         return jsonify({"status": "busy", "message": "Scraping ya en ejecución"}), 409
 
-    scraping_status["running"] = True
-    scraping_status["message"] = "Ejecutando scrapers en segundo plano (aprox 4 minutos)..."
+    # Read optional custom amount from request body
+    amount = None
+    if request.is_json and request.json:
+        amount = request.json.get("amount")
 
-    thread = threading.Thread(target=background_scrape, args=(True,))
+    scraping_status["running"] = True
+    amount_label = f" (monto: {int(amount):,} CLP)" if amount else ""
+    scraping_status["message"] = f"Ejecutando scrapers en segundo plano{amount_label}..."
+
+    thread = threading.Thread(target=background_scrape, args=(True, amount))
     thread.daemon = True
     thread.start()
 
     return jsonify({
         "status": "started",
-        "message": "Scraping iniciado en segundo plano. Los datos aparecerán automáticamente en ~5 minutos tras recargar la página."
+        "message": f"Scraping iniciado en segundo plano{amount_label}. Los datos aparecerán automáticamente en ~5 minutos tras recargar la página."
     })
 
 
