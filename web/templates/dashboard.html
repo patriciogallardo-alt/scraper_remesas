@@ -204,16 +204,17 @@
                     <div class="comp-sub" id="sub-best-fee">Seleccione país</div>
                 </div>
                 
-                <!-- Middle row for Total Quotes & Last Amounts -->
-                <div style="display: grid; grid-column: 1 / -1; grid-template-columns: 2fr 1fr; gap: 1rem;">
-                    <div class="comp-card" id="cc-total-quotes">
+                <!-- Spanning right column for Total Quotes & Last Amounts -->
+                <div class="comp-card comp-card--span3" id="cc-total-quotes" style="justify-content: center; gap: 3rem;">
+                    <div>
                         <div class="comp-label">Total Cotizaciones</div>
-                        <div class="comp-value val-large" id="val-total-quotes">0</div>
+                        <div class="comp-value val-large" id="val-total-quotes" style="margin-bottom:0;">0</div>
                         <div class="comp-sub">Para los filtros seleccionados</div>
                     </div>
-                    <div class="comp-card" id="cc-last-amounts-country" style="background:var(--bg-secondary)">
+                    <div>
                         <div class="comp-label">Últimos 2 Montos Cotizados</div>
-                        <div class="comp-value" id="val-last-amounts-country" style="font-size:1.1rem;margin-top:0.5rem">-</div>
+                        <div class="comp-value" id="val-last-amounts-country" style="font-size:1.5rem; font-weight:700; color:white;">-</div>
+                        <div class="comp-sub">Fijo del servidor</div>
                     </div>
                 </div>
 
