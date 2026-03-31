@@ -449,8 +449,9 @@ class AfexScraper(BaseScraper):
         methods = data.get("data", {}).get("getCollectMethods", {}).get("data", [])
         return [m for m in methods if m.get("isEnabled")]
 
-    async def scrape(self, destinations: list[dict]) -> list[QuoteResult]:
+    async def scrape(self, destinations: list[dict], amount: int = None) -> list[QuoteResult]:
         """Ejecuta scraping de AFEX para todos los destinos."""
+        self.amount = amount or SEND_AMOUNT_CLP
         results = []
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

@@ -173,8 +173,9 @@ class RiaScraper(BaseScraper):
             
         return json.loads(result["text"])
 
-    async def scrape(self, destinations: list[dict]) -> list[QuoteResult]:
+    async def scrape(self, destinations: list[dict], amount: int = None) -> list[QuoteResult]:
         """Ejecuta scraping de RIA para todos los destinos."""
+        self.amount = amount or SEND_AMOUNT_CLP
         results = []
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
