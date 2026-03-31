@@ -178,15 +178,16 @@ function renderHistoryChart(data) {
 
 function onCountryChange() {
     currentPage = 1;
-    // When country changes, update currency filter options to match
     const country = document.getElementById('filter-country').value;
+    
+    // Re-populate ALL filters scoped to the selected country
+    populateFilters();
+    
+    // Auto-select foreign currency (prefer not USD if available)
     if (country) {
         const currencies = [...new Set(
             allData.filter(r => r.pais_destino === country).map(r => r.moneda_destino)
         )].sort();
-        fillSelect('filter-currency', currencies);
-        
-        // Auto-select foreign currency (prefer not USD if available)
         const nonUsd = currencies.filter(c => c !== 'USD');
         if (nonUsd.length > 0) {
             document.getElementById('filter-currency').value = nonUsd[0];
@@ -194,8 +195,6 @@ function onCountryChange() {
             document.getElementById('filter-currency').value = currencies[0];
         }
     } else {
-        const currencies = [...new Set(allData.map(r => r.moneda_destino))].sort();
-        fillSelect('filter-currency', currencies);
         document.getElementById('filter-currency').value = '';
     }
     renderTable();
@@ -409,29 +408,36 @@ function extractSubAgent(r) {
 }
 
 function populateFilters() {
-    const agents = [...new Set(allData.map(r => r.agente))].sort();
     const countries = [...new Set(allData.map(r => r.pais_destino))].sort();
-    const catRecaudacion = [...new Set(allData.map(r => r.categoria_recaudacion).filter(Boolean))].sort();
-    const catDispersion = [...new Set(allData.map(r => r.categoria_dispersion).filter(Boolean))].sort();
-    const subAgents = [...new Set(allData
-        .filter(r => r.agente && String(r.agente).toUpperCase().includes('AFEX'))
-        .map(r => extractSubAgent(r))
-        .filter(Boolean)
-    )].sort();
-
     fillSelect('filter-country', countries);
     
     // Respect current country selection for currency filtering
     const selectedCountry = document.getElementById('filter-country').value;
+    
+    // Pre-filter data by selected country for right-side dropdowns
+    const contextData = selectedCountry
+        ? allData.filter(r => r.pais_destino === selectedCountry)
+        : allData;
+    
     if (selectedCountry) {
         const countryCurrencies = [...new Set(
-            allData.filter(r => r.pais_destino === selectedCountry).map(r => r.moneda_destino)
+            contextData.map(r => r.moneda_destino)
         )].sort();
         fillSelect('filter-currency', countryCurrencies);
     } else {
         const currencies = [...new Set(allData.map(r => r.moneda_destino))].sort();
         fillSelect('filter-currency', currencies);
     }
+    
+    // Right-side filters: scoped to selected country
+    const agents = [...new Set(contextData.map(r => r.agente))].sort();
+    const catRecaudacion = [...new Set(contextData.map(r => r.categoria_recaudacion).filter(Boolean))].sort();
+    const catDispersion = [...new Set(contextData.map(r => r.categoria_dispersion).filter(Boolean))].sort();
+    const subAgents = [...new Set(contextData
+        .filter(r => r.agente && String(r.agente).toUpperCase().includes('AFEX'))
+        .map(r => extractSubAgent(r))
+        .filter(Boolean)
+    )].sort();
     
     populateMultiFilter('agent', agents);
     populateMultiFilter('cat-rec', catRecaudacion);
