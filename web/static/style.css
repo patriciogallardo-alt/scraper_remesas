@@ -164,6 +164,42 @@ body {
     padding: 1.25rem 2rem 2rem;
 }
 
+/* ===== TABS NAVIGATION ===== */
+.tabs-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.25rem;
+    min-height: 44px;
+    align-items: stretch;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.tab-btn.active {
+    color: var(--accent-blue-light);
+    border-bottom-color: var(--accent-blue);
+    font-weight: 600;
+}
+
 /* ===== FILTER PANEL ===== */
 .filter-panel {
     background: var(--bg-card);
