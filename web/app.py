@@ -264,8 +264,13 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
         
     query_url += f"&timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.asc"
     
+    # Supabase defaults to 1000 rows if no Range header is provided.
+    # Since historical data (like 365 days) can easily exceed 1000 rows for a country,
+    # we must expand the Range. 50000 should be safe for a single country's history.
+    hist_headers = {**headers, "Range": "0-49999"}
+    
     try:
-        resp = requests.get(query_url, headers=headers, timeout=15)
+        resp = requests.get(query_url, headers=hist_headers, timeout=15)
         if not resp.ok:
             return []
         results = resp.json()
