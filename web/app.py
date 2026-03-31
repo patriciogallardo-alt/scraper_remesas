@@ -239,12 +239,14 @@ def dashboard():
 @app.route("/api/data")
 def get_data():
     days = request.args.get('days', 0, type=int)
-    total_count = fetch_total_count_from_supabase(days)
     
     if days > 0:
+        total_count = fetch_total_count_from_supabase(days)
         supabase_data = fetch_range_from_supabase(days)
     else:
         supabase_data = fetch_latest_from_supabase()
+        # For "latest quote" mode, count = number of results in the latest batch
+        total_count = len(supabase_data.get("results", [])) if supabase_data else 0
 
     if supabase_data and supabase_data["results"]:
         supabase_data["metadata"]["total_count"] = total_count
