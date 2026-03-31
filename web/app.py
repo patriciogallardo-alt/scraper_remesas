@@ -120,6 +120,60 @@ def fetch_latest_from_supabase():
         logging.error(f"Error cargando de Supabase: {e}")
         return None
 
+def fetch_last_n_runs_from_supabase(n_runs=2):
+    """Obtiene los últimos N bloques distintos de scraping consecutivos."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return None
+        
+    url = f"{SUPABASE_URL}/rest/v1/remittance_quotes"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=3000"
+        ts_resp = requests.get(ts_url, headers=headers, timeout=15)
+        if not ts_resp.ok or not ts_resp.json():
+            return None
+            
+        all_ts = [row["timestamp_scrape"] for row in ts_resp.json()]
+        unique_ts = []
+        for ts in all_ts:
+            if ts not in unique_ts:
+                unique_ts.append(ts)
+            if len(unique_ts) == n_runs:
+                break
+                
+        if not unique_ts:
+            return None
+            
+        # Get data for these specific timestamps
+        ts_list_str = ",".join([f'"{ts}"' for ts in unique_ts])
+        data_url = f"{url}?timestamp_scrape=in.({ts_list_str})&order=timestamp_scrape.desc"
+        data_headers = {**headers, "Range": "0-9999"}
+        data_resp = requests.get(data_url, headers=data_headers, timeout=20)
+        
+        if not data_resp.ok:
+            return None
+            
+        results = data_resp.json()
+        for r in results:
+            r["timestamp"] = r.pop("timestamp_scrape", "")
+            
+        return {
+            "results": results,
+            "metadata": {
+                "timestamp": unique_ts[0], # Most recent timestamp block
+                "total_quotes": len(results),
+                "duration_seconds": "N/D (Nube)"
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error multi-bloque en Supabase: {e}")
+        return None
+
 def fetch_range_from_supabase(days):
     """Fetch all records within the last N days from Supabase."""
     if not SUPABASE_URL or not SUPABASE_KEY:
@@ -243,6 +297,9 @@ def get_data():
     if days > 0:
         total_count = fetch_total_count_from_supabase(days)
         supabase_data = fetch_range_from_supabase(days)
+    elif days == -2:
+        supabase_data = fetch_last_n_runs_from_supabase(2)
+        total_count = len(supabase_data.get("results", [])) if supabase_data else 0
     else:
         supabase_data = fetch_latest_from_supabase()
         # For "latest quote" mode, count = number of results in the latest batch

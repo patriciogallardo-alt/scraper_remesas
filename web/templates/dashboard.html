@@ -82,6 +82,7 @@
                     </label>
                     <select class="filter-select" id="filter-days" onchange="loadData()">
                         <option value="0">Última cotización</option>
+                        <option value="-2">Última y penúltima</option>
                         <option value="3" selected>Últimos 3 días</option>
                         <option value="7">Última semana</option>
                         <option value="14">Últimas 2 semanas</option>
@@ -128,8 +129,8 @@
             <section class="global-summary" id="global-summary">
                 <div class="global-cards">
                     <div class="comp-card">
-                        <div class="comp-label">Total Cotizaciones Capturadas</div>
-                        <div class="comp-value val-large" id="global-total-quotes">-</div>
+                        <div class="comp-label">Últimos 2 Montos Cotizados</div>
+                        <div class="comp-value" id="global-last-amounts" style="font-size:1.1rem;margin-top:0.5rem">-</div>
                     </div>
                     <div class="comp-card">
                         <div class="comp-label">Países Monitoreados</div>
@@ -139,8 +140,12 @@
                         <div class="comp-label">Proveedores Activos</div>
                         <div class="comp-value val-large" id="global-total-agents">-</div>
                     </div>
+                    <div class="comp-card">
+                        <div class="comp-label">Total Cotizaciones Capturadas</div>
+                        <div class="comp-value val-large" id="global-total-quotes">-</div>
+                    </div>
                     <div class="comp-card" style="background:var(--bg-secondary)">
-                        <div class="comp-label">Última Actualización Base de Datos</div>
+                        <div class="comp-label">Última Act. Base de Datos</div>
                         <div class="comp-value" id="global-last-update" style="font-size:1.1rem;margin-top:0.5rem">-</div>
                     </div>
                 </div>
