@@ -520,6 +520,7 @@ class AfexScraper(BaseScraper):
                         data = await self._get_feelookup(
                             country_code=code,
                             method_id=1,
+                            amount=self.amount,
                             payment_agent=payment_agent,
                             receiver_city="*",
                         )
