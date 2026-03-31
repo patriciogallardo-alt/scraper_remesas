@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, jsonify, send_file, request
 from src.exporter import load_latest_run, export_to_excel, save_json
 from src.orchestrator import run_all_scrapers
-from src.config import DATA_DIR
 
 load_dotenv()
 
@@ -399,7 +398,7 @@ def trigger_scrape():
 
     return jsonify({
         "status": "started",
-        "message": f"Scraping iniciado en segundo plano{amount_label}. Los datos aparecerán automáticamente en ~5 minutos tras recargar la página."
+        "message": f"Scraping iniciado en segundo plano{amount_label}. Los datos se actualizarán automáticamente en ~5 minutos."
     })
 
 

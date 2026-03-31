@@ -30,15 +30,7 @@ async def run_all_scrapers(
     scrape_run = ScrapeRun(timestamp=datetime.now(santiago_tz).strftime("%Y-%m-%d %H:%M:%S"))
     start_time = time.time()
 
-    # 1. Obtener tasas de mercado en vivo
-    market_rates = {}
-    try:
-        logger.info("=== Obteniendo tasas de mercado base (CLP) ===")
-        resp = requests.get("https://open.er-api.com/v6/latest/CLP", timeout=10)
-        if resp.status_code == 200:
-            market_rates = resp.json().get("rates", {})
-    except Exception as e:
-        logger.error(f"Error obteniendo tasas de mercado: {e}")
+    # (Tasas de mercado removidas ya que el cálculo de markup se descartó de la UI)
 
     scrapers = []
     if run_afex:
@@ -57,13 +49,6 @@ async def run_all_scrapers(
             for r in results:
                 # Unificar timestamp para agrupar todas las remesadoras bajo una sola consulta
                 r.timestamp = scrape_run.timestamp
-                
-                if r.moneda_destino in market_rates:
-                    # La API da: 1 CLP = X Moneda Destino. 
-                    # Nuestra tasa es: CLP / 1 Moneda Destino, así que invertimos
-                    r.tasa_mercado_clp = 1.0 / market_rates[r.moneda_destino]
-                    # Volver a llamar _post_init manualmente para setear el markup_porcentaje
-                    r.__post_init__()
                     
             scrape_run.results.extend(results)
             logger.info(f"=== {name}: {len(results)} resultados ===")
