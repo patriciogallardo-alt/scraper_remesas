@@ -41,9 +41,9 @@
     
         <!-- TABS NAVIGATION -->
         <nav class="tabs-nav">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">Resumen Ejecutivo</button>
-            <button class="tab-btn" onclick="switchTab('history')">Evolución Histórica</button>
-            <button class="tab-btn" onclick="switchTab('data')">Base de Datos</button>
+            <button class="tab-btn active" onclick="switchTab('dashboard', event)">Resumen Ejecutivo</button>
+            <button class="tab-btn" onclick="switchTab('history', event)">Evolución Histórica</button>
+            <button class="tab-btn" onclick="switchTab('data', event)">Base de Datos</button>
         </nav>
 
         <section class="filter-panel" id="filter-panel" style="position:relative; z-index:20;">
@@ -95,6 +95,13 @@
                     <div class="ms-container" id="ms-cat-disp">
                         <div class="ms-btn" onclick="toggleMs('cat-disp')"><span class="ms-text">Todos</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                         <div class="ms-dropdown" id="dropdown-cat-disp"></div>
+                    </div>
+                </div>
+                <div class="filter-group" id="group-filter-sub-agent">
+                    <label class="filter-label">Agente</label>
+                    <div class="ms-container" id="ms-sub-agent">
+                        <div class="ms-btn" onclick="toggleMs('sub-agent')"><span class="ms-text">Todos</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                        <div class="ms-dropdown" id="dropdown-sub-agent"></div>
                     </div>
                 </div>
             </div>
@@ -262,7 +269,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0)">Agente <span class="sort-arrow"></span></th>
+                                <th onclick="sortTable(0)">Proveedor <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(1)">País Destino <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(2)">Moneda Origen <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(3)">Moneda Destino <span class="sort-arrow"></span></th>
@@ -271,13 +278,16 @@
                             <th onclick="sortTable(6)">Monto Enviado (CLP) <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(7)">Monto Dispersado (ME) <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(8)">TC Normalizado (CLP/ME) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(9)">TC Final (Con Tarifas) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(10)">Tarifa Base (CLP) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(11)">Tarifa Impuesto (CLP) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(12)">Total Cobrado (CLP) <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(13)">Método Recaudación <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(14)">Método Dispersión <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(15)">Timestamp <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(9)">TC Final (CLP/ME) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(10)">TC Norm. Inverso (ME/CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(11)">TC Final Inverso (ME/CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(12)">Tarifa Base (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(13)">Tarifa Impuesto (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(14)">Total Cobrado (CLP) <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(15)">Agente <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(16)">Método Recaudación <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(17)">Método Dispersión <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(18)">Timestamp <span class="sort-arrow"></span></th>
                         </tr>
                     </thead>
                     <tbody id="table-body"></tbody>

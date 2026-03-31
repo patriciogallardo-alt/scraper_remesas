@@ -23,20 +23,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===== Navigation (Tabs) =====
-function switchTab(tabId) {
+function switchTab(tabId, evt) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
+    const clickedBtn = evt ? evt.currentTarget : document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+    if (clickedBtn) clickedBtn.classList.add('active');
+    
     const tab = document.getElementById('tab-' + tabId);
     if (tab) tab.style.display = 'block';
 
     const groupAgent = document.getElementById('group-filter-agent');
-    if (groupAgent) {
-        groupAgent.style.display = tabId === 'history' ? 'none' : 'flex';
-    }
+    const groupSubAgent = document.getElementById('group-filter-sub-agent');
+    if (groupAgent) groupAgent.style.display = tabId === 'history' ? 'none' : 'flex';
+    if (groupSubAgent) groupSubAgent.style.display = tabId === 'history' ? 'none' : 'flex';
 
     if (tabId === 'history') {
         fetchHistory();
@@ -92,8 +92,11 @@ function renderHistoryChart(data) {
         return;
     }
     
-    // Agrupar por fecha ("YYYY-MM-DD") y agente
-    // Para simplificar, tomaremos el mejor TC (máximo) por agente por día
+    // Determine currency pair from data
+    const currencyFilter = document.getElementById('filter-currency').value;
+    const sampleCurrency = currencyFilter || (data.find(r => r.moneda_destino)?.moneda_destino) || 'ME';
+    const yAxisLabel = `TC Final (CLP/${sampleCurrency})`;
+    
     const aggregated = {};
     const datesSet = new Set();
     
@@ -106,7 +109,6 @@ function renderHistoryChart(data) {
         if (!aggregated[dateStr][r.agente]) {
             aggregated[dateStr][r.agente] = r.tasa_cambio_final;
         } else {
-            // Quedarse con el mejor (más alto) del día para ese proveedor
             if (r.tasa_cambio_final > aggregated[dateStr][r.agente]) {
                 aggregated[dateStr][r.agente] = r.tasa_cambio_final;
             }
@@ -115,7 +117,6 @@ function renderHistoryChart(data) {
     
     const labels = Array.from(datesSet).sort();
     
-    // Colores y series
     const agCol = {
         'AFEX': '#1F4E79',
         'Western Union': '#FFCC00',
@@ -124,7 +125,7 @@ function renderHistoryChart(data) {
     
     const agents = Array.from(new Set(data.map(d => d.agente)));
     const datasets = agents.map(ag => {
-        const mappedData = labels.map(day => aggregated[day][ag] || null); // null rompe la linea si falta
+        const mappedData = labels.map(day => aggregated[day][ag] || null);
         return {
             label: ag,
             data: mappedData,
@@ -133,7 +134,7 @@ function renderHistoryChart(data) {
             borderWidth: 3,
             tension: 0.1,
             pointRadius: 4,
-            spanGaps: true // Conectar puntos si falta data en medio
+            spanGaps: true
         };
     });
     
@@ -152,16 +153,16 @@ function renderHistoryChart(data) {
                             let label = context.dataset.label || '';
                             if (label) { label += ': '; }
                             if (context.parsed.y !== null) {
-                                label += new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(context.parsed.y);
+                                label += context.parsed.y.toLocaleString('es-CL', {minimumFractionDigits: 2, maximumFractionDigits: 4});
                             }
-                            return label;
+                            return label + ` CLP/${sampleCurrency}`;
                         }
                     }
                 }
             },
             scales: {
                 y: {
-                    title: { display: true, text: 'Tasa de Cambio Final (CLP)' },
+                    title: { display: true, text: yAxisLabel },
                     ticks: { callback: function(value) { return value.toLocaleString('es-CL'); } }
                 }
             }
@@ -247,12 +248,21 @@ function downloadExcel() {
 }
 
 // ===== Filters =====
+function extractSubAgent(r) {
+    if (r.metodo_dispersion) {
+        const match = r.metodo_dispersion.match(/\((.*?)\)/);
+        if (match) return match[1];
+    }
+    return null;
+}
+
 function populateFilters() {
     const agents = [...new Set(allData.map(r => r.agente))].sort();
     const countries = [...new Set(allData.map(r => r.pais_destino))].sort();
     const currencies = [...new Set(allData.map(r => r.moneda_destino))].sort();
     const catRecaudacion = [...new Set(allData.map(r => r.categoria_recaudacion).filter(Boolean))].sort();
     const catDispersion = [...new Set(allData.map(r => r.categoria_dispersion).filter(Boolean))].sort();
+    const subAgents = [...new Set(allData.map(r => extractSubAgent(r)).filter(Boolean))].sort();
 
     fillSelect('filter-country', countries);
     fillSelect('filter-currency', currencies);
@@ -260,6 +270,7 @@ function populateFilters() {
     populateMultiFilter('agent', agents);
     populateMultiFilter('cat-rec', catRecaudacion);
     populateMultiFilter('cat-disp', catDispersion);
+    populateMultiFilter('sub-agent', subAgents);
 }
 
 function fillSelect(id, options) {
@@ -278,16 +289,21 @@ function getFilteredData() {
     const currency = document.getElementById('filter-currency').value;
     const catRec = getMsValues('cat-rec');
     const catDisp = getMsValues('cat-disp');
+    const subAgent = getMsValues('sub-agent');
 
-    return allData.filter(r =>
-        r.metodo_recaudacion !== 'N/D' &&
-        r.metodo_dispersion !== 'N/D' &&
-        (agent.length === 0 || agent.includes(r.agente)) &&
-        (!country || r.pais_destino === country) &&
-        (!currency || r.moneda_destino === currency) &&
-        (catRec.length === 0 || catRec.includes(r.categoria_recaudacion)) &&
-        (catDisp.length === 0 || catDisp.includes(r.categoria_dispersion))
-    );
+    return allData.filter(r => {
+        const rSubAgent = extractSubAgent(r);
+        return (
+            r.metodo_recaudacion !== 'N/D' &&
+            r.metodo_dispersion !== 'N/D' &&
+            (agent.length === 0 || agent.includes(r.agente)) &&
+            (!country || r.pais_destino === country) &&
+            (!currency || r.moneda_destino === currency) &&
+            (catRec.length === 0 || catRec.includes(r.categoria_recaudacion)) &&
+            (catDisp.length === 0 || catDisp.includes(r.categoria_dispersion)) &&
+            (subAgent.length === 0 || (rSubAgent && subAgent.includes(rSubAgent)) || !rSubAgent)
+        );
+    });
 }
 
 // ===== Table Rendering =====
@@ -336,9 +352,23 @@ function renderTable() {
             const keys = ['agente', 'pais_destino', 'moneda_origen', 'moneda_destino',
                 'categoria_recaudacion', 'categoria_dispersion',
                 'monto_enviado', 'monto_recibido', 'tasa_cambio_normalizada', 'tasa_cambio_final',
-                'fee_base', 'fee_impuesto', 'total_cobrado', 'metodo_recaudacion', 'metodo_dispersion', 'timestamp'];
+                '_tc_norm_inv', '_tc_final_inv',
+                'fee_base', 'fee_impuesto', 'total_cobrado', '_sub_agent',
+                'metodo_recaudacion', 'metodo_dispersion', 'timestamp'];
             const key = keys[sortCol];
-            let va = a[key], vb = b[key];
+            let va, vb;
+            if (key === '_tc_norm_inv') {
+                va = a.tasa_cambio_normalizada ? 1/a.tasa_cambio_normalizada : 0;
+                vb = b.tasa_cambio_normalizada ? 1/b.tasa_cambio_normalizada : 0;
+            } else if (key === '_tc_final_inv') {
+                va = a.tasa_cambio_final ? 1/a.tasa_cambio_final : 0;
+                vb = b.tasa_cambio_final ? 1/b.tasa_cambio_final : 0;
+            } else if (key === '_sub_agent') {
+                va = extractSubAgent(a) || '';
+                vb = extractSubAgent(b) || '';
+            } else {
+                va = a[key]; vb = b[key];
+            }
             if (typeof va === 'number') return sortAsc ? va - vb : vb - va;
             return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
         });
@@ -354,7 +384,11 @@ function renderTable() {
     const start = (currentPage - 1) * rowsPerPage;
     const pageData = data.slice(start, start + rowsPerPage);
 
-    tbody.innerHTML = pageData.map(r => `
+    const fmtInv = (tc) => tc && tc > 0 ? (1/tc).toFixed(6) : '-';
+
+    tbody.innerHTML = pageData.map(r => {
+        const subAgent = extractSubAgent(r) || '-';
+        return `
         <tr>
             <td><span class="agent-badge ${agentClass(r.agente)}">${r.agente}</span></td>
             <td>${r.pais_destino}</td>
@@ -366,14 +400,17 @@ function renderTable() {
             <td class="num-clp">${fmtDec(r.monto_recibido)}</td>
             <td class="num-rate">${fmtRate(r.tasa_cambio_normalizada)}</td>
             <td class="num-rate">${fmtRate(r.tasa_cambio_final)}</td>
+            <td class="num-rate">${fmtInv(r.tasa_cambio_normalizada)}</td>
+            <td class="num-rate">${fmtInv(r.tasa_cambio_final)}</td>
             <td class="num-fee">${fmt(r.fee_base)}</td>
             <td class="num-fee">${fmt(r.fee_impuesto)}</td>
             <td class="num-total">${fmt(r.total_cobrado)}</td>
+            <td>${subAgent}</td>
             <td>${r.metodo_recaudacion}</td>
             <td>${r.metodo_dispersion}</td>
             <td>${r.timestamp || ''}</td>
         </tr>
-    `).join('');
+    `}).join('');
 
     renderPagination(data.length);
 }
