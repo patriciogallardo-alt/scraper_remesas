@@ -249,7 +249,7 @@ function downloadExcel() {
 
 // ===== Filters =====
 function extractSubAgent(r) {
-    if (r.metodo_dispersion) {
+    if (r.agente && r.agente.toUpperCase().includes('AFEX') && r.metodo_dispersion) {
         const match = r.metodo_dispersion.match(/\((.*?)\)/);
         if (match) return match[1];
     }
