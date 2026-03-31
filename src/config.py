@@ -18,6 +18,9 @@ DESTINATIONS = [
     {"country_code": "HT", "country_name": "Haití",      "local_currency": "HTG"},
     {"country_code": "VE", "country_name": "Venezuela",  "local_currency": "VES"},
     {"country_code": "BR", "country_name": "Brasil",     "local_currency": "BRL"},
+    {"country_code": "EC", "country_name": "Ecuador",    "local_currency": "USD"},
+    {"country_code": "ES", "country_name": "España",     "local_currency": "EUR"},
+    {"country_code": "US", "country_name": "EE.UU.",     "local_currency": "USD"},
 ]
 
 # --- Map código país → nombre ---
@@ -46,6 +49,14 @@ COUNTRY_NAME_NORMALIZE = {
     "Brasil": "Brasil",
     "BRAZIL": "Brasil",
     "BRASIL": "Brasil",
+    "EE.UU.": "EE.UU.",
+    "Estados Unidos": "EE.UU.",
+    "USA": "EE.UU.",
+    "Ecuador": "Ecuador",
+    "ECUADOR": "Ecuador",
+    "España": "España",
+    "Spain": "España",
+    "ESPAÑA": "España",
 }
 
 CURRENCY_NAME_NORMALIZE = {
@@ -57,6 +68,7 @@ CURRENCY_NAME_NORMALIZE = {
     "VES": "VES", "Bolívar": "VES", "VEF": "VES",
     "BRL": "BRL", "Real": "BRL",
     "USD": "USD", "Dólar": "USD", "Dollar": "USD",
+    "EUR": "EUR", "Euro": "EUR",
     "CLP": "CLP", "Peso chileno": "CLP",
 }
 
