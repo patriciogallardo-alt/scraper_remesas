@@ -379,7 +379,6 @@ function extractSubAgent(r) {
 function populateFilters() {
     const agents = [...new Set(allData.map(r => r.agente))].sort();
     const countries = [...new Set(allData.map(r => r.pais_destino))].sort();
-    const currencies = [...new Set(allData.map(r => r.moneda_destino))].sort();
     const catRecaudacion = [...new Set(allData.map(r => r.categoria_recaudacion).filter(Boolean))].sort();
     const catDispersion = [...new Set(allData.map(r => r.categoria_dispersion).filter(Boolean))].sort();
     const subAgents = [...new Set(allData
@@ -389,7 +388,18 @@ function populateFilters() {
     )].sort();
 
     fillSelect('filter-country', countries);
-    fillSelect('filter-currency', currencies);
+    
+    // Respect current country selection for currency filtering
+    const selectedCountry = document.getElementById('filter-country').value;
+    if (selectedCountry) {
+        const countryCurrencies = [...new Set(
+            allData.filter(r => r.pais_destino === selectedCountry).map(r => r.moneda_destino)
+        )].sort();
+        fillSelect('filter-currency', countryCurrencies);
+    } else {
+        const currencies = [...new Set(allData.map(r => r.moneda_destino))].sort();
+        fillSelect('filter-currency', currencies);
+    }
     
     populateMultiFilter('agent', agents);
     populateMultiFilter('cat-rec', catRecaudacion);
