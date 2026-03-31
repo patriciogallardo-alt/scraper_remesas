@@ -35,8 +35,14 @@ function switchTab(tabId, evt) {
 
     const groupAgent = document.getElementById('group-filter-agent');
     const groupSubAgent = document.getElementById('group-filter-sub-agent');
-    if (groupAgent) groupAgent.style.display = tabId === 'history' ? 'none' : 'flex';
-    if (groupSubAgent) groupSubAgent.style.display = tabId === 'history' ? 'none' : 'flex';
+    if (groupAgent) {
+        groupAgent.style.visibility = tabId === 'history' ? 'hidden' : '';
+        groupAgent.style.pointerEvents = tabId === 'history' ? 'none' : '';
+    }
+    if (groupSubAgent) {
+        groupSubAgent.style.visibility = tabId === 'history' ? 'hidden' : '';
+        groupSubAgent.style.pointerEvents = tabId === 'history' ? 'none' : '';
+    }
 
     if (tabId === 'history') {
         fetchHistory();
@@ -264,9 +270,12 @@ function downloadExcel() {
 
 // ===== Filters =====
 function extractSubAgent(r) {
-    if (r.agente && r.agente.toUpperCase().includes('AFEX') && r.metodo_dispersion) {
+    if (!r || !r.agente) return null;
+    const agente = String(r.agente).toUpperCase();
+    if (agente !== 'AFEX' && !agente.includes('AFEX')) return null;
+    if (r.metodo_dispersion) {
         const match = r.metodo_dispersion.match(/\((.*?)\)/);
-        if (match) return match[1];
+        if (match && match[1].trim()) return match[1].trim();
     }
     return null;
 }
@@ -277,7 +286,11 @@ function populateFilters() {
     const currencies = [...new Set(allData.map(r => r.moneda_destino))].sort();
     const catRecaudacion = [...new Set(allData.map(r => r.categoria_recaudacion).filter(Boolean))].sort();
     const catDispersion = [...new Set(allData.map(r => r.categoria_dispersion).filter(Boolean))].sort();
-    const subAgents = [...new Set(allData.map(r => extractSubAgent(r)).filter(Boolean))].sort();
+    const subAgents = [...new Set(allData
+        .filter(r => r.agente && String(r.agente).toUpperCase().includes('AFEX'))
+        .map(r => extractSubAgent(r))
+        .filter(Boolean)
+    )].sort();
 
     fillSelect('filter-country', countries);
     fillSelect('filter-currency', currencies);
