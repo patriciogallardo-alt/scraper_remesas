@@ -172,6 +172,8 @@ body {
     margin-bottom: 1.25rem;
     min-height: 44px;
     align-items: stretch;
+    position: relative;
+    z-index: 10;
 }
 
 .tab-btn {
