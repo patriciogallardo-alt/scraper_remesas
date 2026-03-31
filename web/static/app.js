@@ -368,19 +368,23 @@ function downloadExcel() {
 
     try {
         const exportData = data.map(r => ({
+            "Fecha/Hora": r.timestamp_scrape || r.timestamp,
             "Proveedor": r.agente,
             "País Destino": r.pais_destino,
+            "Moneda Origen": r.moneda_origen,
             "Moneda Destino": r.moneda_destino,
-            "Monto a Enviar (CLP)": r.monto_enviado,
-            "Monto a Recibir": r.monto_recibido,
-            "Tasa Normalizada (CLP/Divisa)": r.tasa_cambio_normalizada,
-            "Tasa Final Cotizada": r.tasa_cambio_final,
+            "Monto Enviado (CLP)": r.monto_enviado,
+            "Monto Recibido": r.monto_recibido,
+            "TC Proveedor (Raw)": r.tasa_de_cambio,
+            "TC Normalizada (CLP/Divisa)": r.tasa_cambio_normalizada,
+            "TC Final Cotizada": r.tasa_cambio_final,
             "Fee Base (CLP)": r.fee_base,
             "Impuestos (CLP)": r.fee_impuesto,
             "Total Cobrado (CLP)": r.total_cobrado,
+            "Método Recaudación": r.metodo_recaudacion,
+            "Método Dispersión": r.metodo_dispersion,
             "Cat. Recaudación": r.categoria_recaudacion,
-            "Cat. Dispersión": r.categoria_dispersion,
-            "Fecha/Hora (CL)": r.timestamp_scrape || r.timestamp
+            "Cat. Dispersión": r.categoria_dispersion
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
