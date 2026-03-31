@@ -707,7 +707,7 @@ function updateMeta(meta) {
     const domAg = document.getElementById('global-total-agents');
     const domUpd = document.getElementById('global-last-update');
     
-    if (domQuot) domQuot.innerText = meta.total_quotes || allData.length;
+    if (domQuot) domQuot.innerText = (meta.total_count || meta.total_quotes || allData.length).toLocaleString('es-CL');
     if (domCoun) {
         const countries = new Set(allData.map(r => r.pais_destino)).size;
         domCoun.innerText = countries;

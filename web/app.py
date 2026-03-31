@@ -204,6 +204,34 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
         return []
 
 
+def fetch_total_count_from_supabase(days=0):
+    """Get exact count of records from Supabase without downloading data."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return 0
+    url = f"{SUPABASE_URL}/rest/v1/remittance_quotes"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "count=exact",
+        "Range": "0-0"
+    }
+    try:
+        query_url = f"{url}?select=id"
+        if days and int(days) > 0:
+            threshold_date = (datetime.utcnow() - timedelta(days=int(days))).isoformat()
+            query_url += f"&timestamp_scrape=gte.{threshold_date}"
+        resp = requests.get(query_url, headers=headers, timeout=10)
+        # Supabase returns count in Content-Range header: "0-0/13626"
+        content_range = resp.headers.get('Content-Range', '')
+        if '/' in content_range:
+            return int(content_range.split('/')[1])
+        return len(resp.json()) if resp.ok else 0
+    except Exception as e:
+        logging.error(f"Error obteniendo count de Supabase: {e}")
+        return 0
+
+
 @app.route("/")
 def dashboard():
     return render_template("dashboard.html")
@@ -212,6 +240,7 @@ def dashboard():
 @app.route("/api/data")
 def get_data():
     days = request.args.get('days', 0, type=int)
+    total_count = fetch_total_count_from_supabase(days)
     
     if days > 0:
         supabase_data = fetch_range_from_supabase(days)
@@ -219,6 +248,7 @@ def get_data():
         supabase_data = fetch_latest_from_supabase()
 
     if supabase_data and supabase_data["results"]:
+        supabase_data["metadata"]["total_count"] = total_count
         return jsonify(supabase_data)
 
     # Fallback al archivo local si falla
