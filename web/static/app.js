@@ -875,15 +875,17 @@ function updateMeta(meta) {
     
     // Last 2 scrape amounts (Fixed globally from backend metadata)
     const domLastAmts = document.getElementById('global-last-amounts');
-    if (domLastAmts) {
-        if (meta.last_2_amounts && meta.last_2_amounts.length >= 2) {
-            domLastAmts.innerText = `$${meta.last_2_amounts[0].toLocaleString('es-CL')} y $${meta.last_2_amounts[1].toLocaleString('es-CL')}`;
-        } else if (meta.last_2_amounts && meta.last_2_amounts.length === 1) {
-            domLastAmts.innerText = `$${meta.last_2_amounts[0].toLocaleString('es-CL')}`;
-        } else {
-            domLastAmts.innerText = 'N/D';
-        }
+    const domLastAmtsCountry = document.getElementById('val-last-amounts-country');
+    
+    let textAmts = 'N/D';
+    if (meta.last_2_amounts && meta.last_2_amounts.length >= 2) {
+        textAmts = `$${meta.last_2_amounts[0].toLocaleString('es-CL')} y $${meta.last_2_amounts[1].toLocaleString('es-CL')}`;
+    } else if (meta.last_2_amounts && meta.last_2_amounts.length === 1) {
+        textAmts = `$${meta.last_2_amounts[0].toLocaleString('es-CL')}`;
     }
+    
+    if (domLastAmts) domLastAmts.innerText = textAmts;
+    if (domLastAmtsCountry) domLastAmtsCountry.innerText = textAmts;
 }
 
 // ===== Helpers =====
