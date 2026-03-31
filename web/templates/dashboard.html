@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for client-side Excel generation -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -79,6 +81,7 @@
                         Período
                     </label>
                     <select class="filter-select" id="filter-days" onchange="loadData()">
+                        <option value="0">Última cotización</option>
                         <option value="3" selected>Últimos 3 días</option>
                         <option value="7">Última semana</option>
                         <option value="14">Últimas 2 semanas</option>

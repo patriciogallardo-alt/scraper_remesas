@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 async def run_all_scrapers(
+    amount: int = None,
     run_afex: bool = True,
     run_ria: bool = True,
     run_wu: bool = True
@@ -43,7 +44,7 @@ async def run_all_scrapers(
     for name, scraper in scrapers:
         try:
             logger.info(f"=== Ejecutando scraper {name} ===")
-            results = await scraper.scrape(DESTINATIONS)
+            results = await scraper.scrape(DESTINATIONS, amount)
             
             # Inject market rates, uniform timestamp and calculate markup
             for r in results:

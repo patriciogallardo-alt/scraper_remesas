@@ -289,17 +289,14 @@ def background_scrape(is_manual=False, amount=None):
             return
         scraping_status["running"] = True
         
-    # Override amount if provided (manual scrape with custom amount)
-    import src.config as config_module
-    original_amount = config_module.SEND_AMOUNT_CLP
-    if amount is not None:
-        config_module.SEND_AMOUNT_CLP = int(amount)
-        logging.info(f"Monto personalizado para scraping: {config_module.SEND_AMOUNT_CLP:,} CLP")
-        
     try:
+        if amount is not None:
+            logging.info(f"Scraping manual con monto personalizado: {amount} CLP")
+            
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        scrape_run = loop.run_until_complete(run_all_scrapers())
+        # Pass amount cleanly through the orchestrator. If None, it automatically falls back to config.SEND_AMOUNT_CLP
+        scrape_run = loop.run_until_complete(run_all_scrapers(amount=amount))
         loop.close()
 
         if scrape_run.results:
@@ -312,8 +309,6 @@ def background_scrape(is_manual=False, amount=None):
         scraping_status["message"] = f"Error: {str(e)}"
         logging.error(f"Background scrape failed: {e}")
     finally:
-        # Restore original amount
-        config_module.SEND_AMOUNT_CLP = original_amount
         scraping_status["running"] = False
 
 # ===== Configuración de Cron (Chile) =====

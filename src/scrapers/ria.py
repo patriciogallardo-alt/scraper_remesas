@@ -119,7 +119,7 @@ class RiaScraper(BaseScraper):
         payload = {
             "selections": {
                 "countryTo": country_code,
-                "amountFrom": SEND_AMOUNT_CLP,
+                "amountFrom": self.amount,
                 "amountTo": None,
                 "currencyFrom": "CLP",
                 "shouldCalcAmountFrom": False,

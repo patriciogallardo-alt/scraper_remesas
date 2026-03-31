@@ -15,7 +15,7 @@ class BaseScraper(ABC):
     name: str = "Base"
 
     @abstractmethod
-    async def scrape(self, destinations: list[dict]) -> list[QuoteResult]:
+    async def scrape(self, destinations: list[dict], amount: int = None) -> list[QuoteResult]:
         """
         Ejecuta el scraping para todos los destinos dados.
         

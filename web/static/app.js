@@ -361,7 +361,39 @@ async function triggerScrape() {
 }
 
 function downloadExcel() {
-    window.location.href = '/api/data/download';
+    const data = getFilteredData();
+    if (!data || data.length === 0) {
+        showToast('No hay datos para exportar con los filtros actuales.', 'warning');
+        return;
+    }
+
+    try {
+        const exportData = data.map(r => ({
+            "Proveedor": r.agente,
+            "País Destino": r.pais_destino,
+            "Moneda Destino": r.moneda_destino,
+            "Monto a Enviar (CLP)": r.monto_enviado,
+            "Monto a Recibir": r.monto_recibido,
+            "Tasa Normalizada (CLP/Divisa)": r.tasa_cambio_normalizada,
+            "Tasa Final Cotizada": r.tasa_cambio_final,
+            "Fee Base (CLP)": r.fee_base,
+            "Impuestos (CLP)": r.fee_impuesto,
+            "Total Cobrado (CLP)": r.total_cobrado,
+            "Cat. Recaudación": r.categoria_recaudacion,
+            "Cat. Dispersión": r.categoria_dispersion,
+            "Fecha/Hora (CL)": r.timestamp_scrape || r.timestamp
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Remesas");
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(workbook, `remesas_filtradas_${dateStr}.xlsx`);
+    } catch (e) {
+        console.error("Error exportando Excel:", e);
+        showToast('Error al generar el archivo Excel.', 'error');
+    }
 }
 
 // ===== Filters =====

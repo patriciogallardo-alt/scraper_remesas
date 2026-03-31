@@ -642,7 +642,7 @@ class WesternUnionScraper(BaseScraper):
         external_ref = f"webapp-{uuid.uuid4()}"
 
         # Amount in WU is multiplied by 100 (centavos)
-        amount_wu = SEND_AMOUNT_CLP * 100
+        amount_wu = self.amount * 100
         timestamp_ms = int(time.time() * 1000)
 
         variables = {
@@ -723,8 +723,9 @@ class WesternUnionScraper(BaseScraper):
 
         return parsed
 
-    async def scrape(self, destinations: list[dict]) -> list[QuoteResult]:
+    async def scrape(self, destinations: list[dict], amount: int = None) -> list[QuoteResult]:
         """Ejecuta scraping de WU para todos los destinos."""
+        self.amount = amount or SEND_AMOUNT_CLP
         results = []
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
