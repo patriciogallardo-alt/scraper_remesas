@@ -825,7 +825,7 @@ class WesternUnionScraper(BaseScraper):
                                 pais_destino=country_name,
                                 moneda_origen="CLP",
                                 moneda_destino=dest_currency_norm,
-                                monto_enviado=float(SEND_AMOUNT_CLP),
+                                monto_enviado=float(self.amount),
                                 monto_recibido=receive_amount,
                                 tasa_de_cambio=exchange_rate,
                                 fee_base=fee_base,

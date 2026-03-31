@@ -283,7 +283,7 @@ class RiaScraper(BaseScraper):
                                     pais_destino=country_name,
                                     moneda_origen="CLP",
                                     moneda_destino=dest_currency,
-                                    monto_enviado=float(SEND_AMOUNT_CLP),
+                                    monto_enviado=float(self.amount),
                                     monto_recibido=amount_to,
                                     tasa_de_cambio=exchange_rate,
                                     fee_base=transfer_fee,
