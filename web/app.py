@@ -98,7 +98,8 @@ def fetch_latest_from_supabase():
         
         # 2. Traer todos los registros con ese timestamp
         data_url = f"{url}?timestamp_scrape=eq.{latest_ts}"
-        data_resp = requests.get(data_url, headers=headers, timeout=15)
+        data_headers = {**headers, "Range": "0-9999"}
+        data_resp = requests.get(data_url, headers=data_headers, timeout=15)
         if not data_resp.ok:
             return None
             
@@ -138,7 +139,8 @@ def fetch_range_from_supabase(days):
     
     try:
         data_url = f"{url}?timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.desc"
-        data_resp = requests.get(data_url, headers=headers, timeout=15)
+        data_headers = {**headers, "Range": "0-9999"}
+        data_resp = requests.get(data_url, headers=data_headers, timeout=30)
         if not data_resp.ok:
             return None
             
