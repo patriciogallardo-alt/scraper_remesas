@@ -621,8 +621,10 @@ def trigger_scrape():
 
     # Read optional custom amount from request body
     amount = None
-    if request.is_json and request.json:
-        amount = request.json.get("amount")
+    if request.is_json:
+        body = request.get_json(silent=True)
+        if body:
+            amount = body.get("amount")
 
     scraping_status["running"] = True
     amount_label = f" (monto: {int(amount):,} CLP)" if amount else ""

@@ -32,6 +32,7 @@ jobs:
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
+            -d "{}" \
             "${{ secrets.RAILWAY_APP_URL }}/api/scrape")
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
