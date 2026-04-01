@@ -419,12 +419,46 @@ import tempfile
 from openpyxl import Workbook
 from src.models import QuoteResult
 
+@app.route("/api/db_date_range")
+def db_date_range():
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return jsonify({"min": None, "max": None})
+        
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        url_max = f"{SUPABASE_URL}/rest/v1/remittance_quotes?select=timestamp_scrape&order=timestamp_scrape.desc&limit=1"
+        res_max = requests.get(url_max, headers=headers, timeout=10)
+        
+        url_min = f"{SUPABASE_URL}/rest/v1/remittance_quotes?select=timestamp_scrape&order=timestamp_scrape.asc&limit=1"
+        res_min = requests.get(url_min, headers=headers, timeout=10)
+        
+        max_date = res_max.json()[0]["timestamp_scrape"][:10] if res_max.ok and res_max.json() else None
+        min_date = res_min.json()[0]["timestamp_scrape"][:10] if res_min.ok and res_min.json() else None
+        
+        return jsonify({"min": min_date, "max": max_date})
+    except Exception as e:
+        logging.error(f"Error API dates: {e}")
+        return jsonify({"min": None, "max": None})
+
 @app.route("/api/download_full_db")
 def download_full_db():
     if not SUPABASE_URL or not SUPABASE_KEY:
         return "Supabase no configurado", 500
         
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+        
     url = f"{SUPABASE_URL}/rest/v1/remittance_quotes?order=timestamp_scrape.desc"
+    if start_date:
+        url += f"&timestamp_scrape=gte.{start_date}T00:00:00"
+    if end_date:
+        url += f"&timestamp_scrape=lte.{end_date}T23:59:59"
+        
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",

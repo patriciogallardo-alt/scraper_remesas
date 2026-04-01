@@ -1041,3 +1041,53 @@ function populateMultiFilter(containerId, dataList) {
     container.innerHTML = html;
     updateMsText(containerId, false);
 }
+
+// ===== DB Backup Modal =====
+async function openDbModal() {
+    const modal = document.getElementById('db-modal');
+    modal.style.display = 'flex';
+    const btn = document.getElementById('btn-confirm-db');
+    btn.disabled = true;
+    btn.textContent = 'Cargando fechas...';
+    
+    try {
+        const resp = await fetch('/api/db_date_range');
+        const json = await resp.json();
+        
+        const startInput = document.getElementById('db-start-date');
+        const endInput = document.getElementById('db-end-date');
+        
+        if (json.min && json.max) {
+            startInput.min = json.min;
+            startInput.max = json.max;
+            startInput.value = json.min;
+            
+            endInput.min = json.min;
+            endInput.max = json.max;
+            endInput.value = json.max;
+        }
+    } catch(e) {
+        console.error("Error fetching db dates:", e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Descargar Excel';
+    }
+}
+
+function confirmDbDownload() {
+    const start = document.getElementById('db-start-date').value;
+    const end = document.getElementById('db-end-date').value;
+    
+    if(!start || !end) {
+        alert("Debes seleccionar ambas fechas.");
+        return;
+    }
+    
+    if(start > end) {
+        alert("La fecha de inicio no puede ser mayor a la fecha final.");
+        return;
+    }
+    
+    document.getElementById('db-modal').style.display = 'none';
+    window.location.href = `/api/download_full_db?start_date=${start}&end_date=${end}`;
+}

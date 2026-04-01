@@ -27,7 +27,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-secondary" onclick="window.location.href='/api/download_full_db'" title="Descargar Base de Datos Completa (Excel)">
+            <button class="btn btn-secondary" onclick="openDbModal()" title="Descargar Base de Datos Completa (Excel)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Backup DB
             </button>
@@ -363,6 +363,32 @@
         <div style="text-align:center">
             <div class="loading-spinner"></div>
             <p class="loading-text">Ejecutando scrapers...<br>Esto puede tomar unos minutos</p>
+        </div>
+    </div>
+
+    <!-- DB DOWNLOAD MODAL -->
+    <div id="db-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+        <div class="modal-content" style="background:var(--bg-secondary); padding:2rem; border-radius:12px; width:100%; max-width:400px; border:1px solid var(--border-color);">
+            <h3 style="margin-bottom:1rem; color:var(--text-primary);">Rango de Base de Datos</h3>
+            <p style="color:var(--text-muted); margin-bottom:1.5rem; font-size:0.9rem;">Selecciona el rango de fechas que deseas exportar a Excel.</p>
+            
+            <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom:2rem;">
+                <div class="filter-group">
+                    <label class="filter-label">Desde</label>
+                    <input type="date" id="db-start-date" class="filter-select" style="width:100%; color-scheme:dark;">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Hasta</label>
+                    <input type="date" id="db-end-date" class="filter-select" style="width:100%; color-scheme:dark;">
+                </div>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:1rem;">
+                <button class="btn btn-secondary" onclick="document.getElementById('db-modal').style.display='none'">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmDbDownload()" id="btn-confirm-db">
+                    Descargar Excel
+                </button>
+            </div>
         </div>
     </div>
 
