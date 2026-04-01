@@ -76,12 +76,12 @@
                 <span class="filter-divider"></span>
                 <div class="filter-group filter-group-lg">
                     <label class="filter-label">Moneda Destino</label>
-                    <select class="filter-select filter-select-lg" id="filter-currency"></select>
+                    <select class="filter-select filter-select-lg" id="filter-currency" onchange="currentPage=1; renderTable(); if(document.getElementById('tab-history').style.display !== 'none'){fetchHistory();}"></select>
                 </div>
                 <span class="filter-divider"></span>
                 <div class="filter-group">
                     <label class="filter-label">Monto Cotizado (CLP)</label>
-                    <select class="filter-select" id="filter-amount" onchange="renderTable()"></select>
+                    <select class="filter-select" id="filter-amount" onchange="currentPage=1; renderTable(); if(document.getElementById('tab-history').style.display !== 'none'){fetchHistory();}"></select>
                 </div>
                 <span class="filter-divider"></span>
                 <div class="filter-group">
