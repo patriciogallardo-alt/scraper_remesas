@@ -478,7 +478,13 @@ def download_full_db():
     ws.title = "Histórico Completo"
     
     # Headers
-    headers_list = QuoteResult.csv_headers()
+    headers_list = [
+        "Fecha/Hora", "Proveedor", "País Destino", "Moneda Origen", "Moneda Destino",
+        "Monto Enviado (CLP)", "Monto Recibido", "TC Proveedor (Raw)",
+        "TC Normalizada (CLP/Divisa)", "TC Final Cotizada",
+        "Fee Base (CLP)", "Impuestos (CLP)", "Total Cobrado (CLP)",
+        "Método Recaudación", "Método Dispersión", "Cat. Recaudación", "Cat. Dispersión"
+    ]
     ws.append(headers_list)
     
     # Rows
@@ -489,17 +495,18 @@ def download_full_db():
             row.get("pais_destino"),
             row.get("moneda_origen"),
             row.get("moneda_destino"),
-            row.get("categoria_recaudacion"),
-            row.get("categoria_dispersion"),
             row.get("monto_enviado"),
             row.get("monto_recibido"),
+            row.get("tasa_de_cambio"),
             row.get("tasa_cambio_normalizada"),
             row.get("tasa_cambio_final"),
             float(row.get("fee_base", 0) or 0),
             float(row.get("fee_impuesto", 0) or 0),
             float(row.get("total_cobrado", 0) or 0),
             row.get("metodo_recaudacion"),
-            row.get("metodo_dispersion")
+            row.get("metodo_dispersion"),
+            row.get("categoria_recaudacion"),
+            row.get("categoria_dispersion")
         ])
     
     wb.save(temp_path)
