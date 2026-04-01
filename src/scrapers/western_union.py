@@ -14,7 +14,7 @@ from playwright.async_api import async_playwright
 from src.scrapers.base import BaseScraper
 from src.models import QuoteResult
 from src.config import (
-    WU_EMAIL, WU_PASSWORD, SEND_AMOUNT_CLP,
+    WU_EMAIL, WU_PASSWORD, CRON_DEFAULT_AMOUNT_CLP,
     BROWSER_PROFILES_DIR, normalize_country, normalize_currency,
     REQUEST_TIMEOUT, normalize_metodo_recaudacion, normalize_metodo_dispersion
 )
@@ -725,7 +725,7 @@ class WesternUnionScraper(BaseScraper):
 
     async def scrape(self, destinations: list[dict], amount: int = None) -> list[QuoteResult]:
         """Ejecuta scraping de WU para todos los destinos."""
-        self.amount = amount or SEND_AMOUNT_CLP
+        self.amount = amount or CRON_DEFAULT_AMOUNT_CLP
         results = []
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

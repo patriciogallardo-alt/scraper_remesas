@@ -6,8 +6,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# --- Monto fijo a cotizar ---
-SEND_AMOUNT_CLP = 100_000
+# --- Monto fijo a cotizar por el CRON Automático ---
+# Este monto es el fallback que usan los scrapers cuando corren de forma programada a ciertas horas.
+# El scrapeo manual ingresado desde la interfaz web ignora esto y usa el monto digitado por el usuario.
+CRON_DEFAULT_AMOUNT_CLP = 100_000
 
 # --- Países destino ---
 DESTINATIONS = [

@@ -8,7 +8,7 @@ from datetime import datetime
 from src.scrapers.base import BaseScraper
 from src.models import QuoteResult
 from src.config import (
-    AFEX_USERNAME, AFEX_PASSWORD, SEND_AMOUNT_CLP,
+    AFEX_USERNAME, AFEX_PASSWORD, CRON_DEFAULT_AMOUNT_CLP,
     normalize_country, normalize_currency, REQUEST_TIMEOUT,
     normalize_metodo_recaudacion, normalize_metodo_dispersion
 )
@@ -398,7 +398,7 @@ class AfexScraper(BaseScraper):
         self,
         country_code: str,
         method_id: int = 1,
-        amount: int = SEND_AMOUNT_CLP,
+        amount: int = CRON_DEFAULT_AMOUNT_CLP,
         payment_agent: str | None = None,
         receiver_city: str = "*",
     ) -> dict:
@@ -451,7 +451,7 @@ class AfexScraper(BaseScraper):
 
     async def scrape(self, destinations: list[dict], amount: int = None) -> list[QuoteResult]:
         """Ejecuta scraping de AFEX para todos los destinos."""
-        self.amount = amount or SEND_AMOUNT_CLP
+        self.amount = amount or CRON_DEFAULT_AMOUNT_CLP
         results = []
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
