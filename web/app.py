@@ -282,7 +282,7 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
         
     if days == 0:
         # Última cotización
-        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=1"
+        ts_url = query_url.replace("select=timestamp_scrape,agente,tasa_cambio_final,monto_enviado", "select=timestamp_scrape") + "&order=timestamp_scrape.desc&limit=1"
         ts_resp = requests.get(ts_url, headers=headers, timeout=10)
         if ts_resp.ok and ts_resp.json():
             latest_ts = ts_resp.json()[0]["timestamp_scrape"]
@@ -291,7 +291,7 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
             return []
     elif days == -1:
         # Penúltima cotización
-        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=2000"
+        ts_url = query_url.replace("select=timestamp_scrape,agente,tasa_cambio_final,monto_enviado", "select=timestamp_scrape") + "&order=timestamp_scrape.desc&limit=2000"
         ts_resp = requests.get(ts_url, headers=headers, timeout=15)
         if ts_resp.ok and ts_resp.json():
             all_ts = [row["timestamp_scrape"] for row in ts_resp.json()]
@@ -609,8 +609,9 @@ def get_history():
     cat_rec = request.args.get("catRec")
     cat_disp = request.args.get("catDisp")
     agents = request.args.get("agent")
+    amount = request.args.get("amount")
     
-    data = fetch_history_from_supabase(country, days, currency, cat_rec, cat_disp, agents)
+    data = fetch_history_from_supabase(country, days, currency, cat_rec, cat_disp, agents, amount)
     return jsonify(data)
 
 @app.route("/api/scrape", methods=["POST"])
