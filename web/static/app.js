@@ -847,7 +847,7 @@ function updateMeta(meta) {
     if (!meta) return;
     
     // Header timestamp
-    document.getElementById('meta-info').textContent = `Actualizado: ${meta.timestamp} (${meta.total_quotes} cot.)`;
+    document.getElementById('meta-info').textContent = `Actualizado: ${meta.timestamp}`;
 
     // Global Summary Empty State Variables
     const domQuot = document.getElementById('global-total-quotes');
