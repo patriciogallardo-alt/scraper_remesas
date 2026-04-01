@@ -52,8 +52,7 @@ function switchTab(tabId, evt) {
 let historyChartInstance = null;
 async function fetchHistory() {
     const country = document.getElementById('filter-country').value;
-    const globalDays = parseInt(document.getElementById('filter-days')?.value || '7', 10);
-    const days = globalDays > 0 ? globalDays : 7; // History always needs at least 7 days
+    const days = parseInt(document.getElementById('filter-days')?.value || '7', 10);
     const currency = document.getElementById('filter-currency').value;
     const agent = getMsValues('agent').map(v => encodeURIComponent(v)).join(',');
     const catRec = getMsValues('cat-rec').map(v => encodeURIComponent(v)).join(',');

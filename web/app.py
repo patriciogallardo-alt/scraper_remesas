@@ -268,8 +268,6 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
         "Content-Type": "application/json"
     }
     
-    threshold_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
-    
     query_url = f"{url}?select=timestamp_scrape,agente,tasa_cambio_final&pais_destino=eq.{country}"
     if currency:
         query_url += f"&moneda_destino=eq.{currency}"
@@ -280,7 +278,40 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
     if agents:
         query_url += f"&agente=in.({','.join(agents.split(','))})"
         
-    query_url += f"&timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.asc"
+    if days == 0:
+        # Última cotización
+        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=1"
+        ts_resp = requests.get(ts_url, headers=headers, timeout=10)
+        if ts_resp.ok and ts_resp.json():
+            latest_ts = ts_resp.json()[0]["timestamp_scrape"]
+            query_url += f"&timestamp_scrape=eq.{latest_ts}"
+        else:
+            return []
+    elif days == -1:
+        # Penúltima cotización
+        ts_url = f"{url}?select=timestamp_scrape&order=timestamp_scrape.desc&limit=2000"
+        ts_resp = requests.get(ts_url, headers=headers, timeout=15)
+        if ts_resp.ok and ts_resp.json():
+            all_ts = [row["timestamp_scrape"] for row in ts_resp.json()]
+            unique_ts = []
+            for ts in all_ts:
+                if ts not in unique_ts:
+                    unique_ts.append(ts)
+                if len(unique_ts) == 2:
+                    break
+            if len(unique_ts) >= 2:
+                penultima_ts = unique_ts[1]
+                query_url += f"&timestamp_scrape=eq.{penultima_ts}"
+            else:
+                return []
+        else:
+            return []
+    else:
+        # Rango de días normal
+        threshold_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
+        query_url += f"&timestamp_scrape=gte.{threshold_date}"
+        
+    query_url += "&order=timestamp_scrape.asc"
     
     # Eliminamos el uso manual de postgREST limit/range y delegamos al helper
     try:
@@ -380,6 +411,52 @@ def download_excel():
         as_attachment=True,
         download_name="remesas.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+from flask import Response
+
+@app.route("/api/download_full_csv")
+def download_full_csv():
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return "Supabase no configurado", 500
+        
+    def generate():
+        url = f"{SUPABASE_URL}/rest/v1/remittance_quotes?order=timestamp_scrape.desc"
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Accept": "text/csv"
+        }
+        page_size = 1000
+        offset = 0
+        first_page = True
+        
+        while True:
+            page_headers = {**headers, "Range": f"{offset}-{offset + page_size - 1}"}
+            resp = requests.get(url, headers=page_headers, timeout=30)
+            if not resp.ok: 
+                break
+            
+            lines = resp.text.splitlines()
+            if not lines: 
+                break
+                
+            if first_page:
+                yield resp.text + "\n"
+                first_page = False
+            else:
+                if len(lines) > 1:
+                    yield "\n".join(lines[1:]) + "\n"
+                    
+            if len(lines) - 1 < page_size:
+                break
+            offset += page_size
+            
+    return Response(
+        generate(), 
+        mimetype="text/csv", 
+        headers={"Content-Disposition": "attachment;filename=historico_remesas_completo.csv"}
     )
 
 
