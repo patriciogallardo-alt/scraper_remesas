@@ -22,4 +22,4 @@ EXPOSE 10000
 
 # Comando para ejecutar la aplicación, apuntando al archivo "app.py" dentro de "web/"
 # "web.app:app" significa buscar en el módulo "web/app.py" la variable "app"
-CMD ["gunicorn", "--bind", "0.0.0.0:10000", "--timeout", "600", "--workers", "1", "--preload", "web.app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:10000", "--timeout", "600", "--workers", "1", "web.app:app"]
