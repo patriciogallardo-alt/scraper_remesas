@@ -53,6 +53,7 @@ let historyChartInstance = null;
 async function fetchHistory() {
     const country = document.getElementById('filter-country').value;
     const days = parseInt(document.getElementById('filter-days')?.value || '7', 10);
+    const amountStr = document.getElementById('filter-amount')?.value;
     const currency = document.getElementById('filter-currency').value;
     const agent = getMsValues('agent').map(v => encodeURIComponent(v)).join(',');
     const catRec = getMsValues('cat-rec').map(v => encodeURIComponent(v)).join(',');
@@ -72,6 +73,7 @@ async function fetchHistory() {
     try {
         let url = `/api/history?country=${encodeURIComponent(country)}&days=${days}`;
         if (currency) url += `&currency=${encodeURIComponent(currency)}`;
+        if (amountStr) url += `&amount=${amountStr}`;
         if (catRec) url += `&catRec=${catRec}`;
         if (catDisp) url += `&catDisp=${catDisp}`;
         // Note: Agent filter is ignored for History per user request (legend is the filter)
@@ -440,6 +442,15 @@ function populateFilters() {
         fillSelect('filter-currency', currencies);
     }
     
+    // Populate Monto Cotizado (CLP)
+    const amtSelect = document.getElementById('filter-amount');
+    if (amtSelect) {
+        const prevAmount = amtSelect.value;
+        const amounts = [...new Set(contextData.map(r => r.monto_enviado))].filter(Boolean).sort((a,b) => a - b);
+        amtSelect.innerHTML = '<option value="">Todos</option>' + amounts.map(a => `<option value="${a}">${fmt(a)}</option>`).join('');
+        if (amounts.includes(parseInt(prevAmount))) amtSelect.value = prevAmount;
+    }
+    
     // Right-side filters: scoped to selected country
     const agents = [...new Set(contextData.map(r => r.agente))].sort();
     const catRecaudacion = [...new Set(contextData.map(r => r.categoria_recaudacion).filter(Boolean))].sort();
@@ -473,6 +484,9 @@ function getFilteredData() {
     const catRec = getMsValues('cat-rec');
     const catDisp = getMsValues('cat-disp');
     const subAgent = getMsValues('sub-agent');
+    
+    const amountStr = document.getElementById('filter-amount')?.value;
+    const amountFilter = amountStr ? parseInt(amountStr, 10) : null;
 
     return allData.filter(r => {
         const rSubAgent = extractSubAgent(r);
@@ -482,6 +496,7 @@ function getFilteredData() {
             (agent.length === 0 || agent.includes(r.agente)) &&
             (!country || r.pais_destino === country) &&
             (!currency || r.moneda_destino === currency) &&
+            (!amountFilter || r.monto_enviado === amountFilter) &&
             (catRec.length === 0 || catRec.includes(r.categoria_recaudacion)) &&
             (catDisp.length === 0 || catDisp.includes(r.categoria_dispersion)) &&
             (subAgent.length === 0 || (rSubAgent && subAgent.includes(rSubAgent)) || !rSubAgent)

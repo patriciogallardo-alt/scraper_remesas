@@ -257,7 +257,7 @@ def fetch_range_from_supabase(days):
         logging.error(f"Error cargando rango de Supabase: {e}")
         return None
 
-def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, cat_disp=None, agents=None):
+def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, cat_disp=None, agents=None, amount=None):
     if not SUPABASE_URL or not SUPABASE_KEY:
         return []
         
@@ -277,6 +277,8 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
         query_url += f"&categoria_dispersion=in.({','.join(cat_disp.split(','))})"
     if agents:
         query_url += f"&agente=in.({','.join(agents.split(','))})"
+    if amount:
+        query_url += f"&monto_enviado=eq.{amount}"
         
     if days == 0:
         # Última cotización
