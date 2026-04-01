@@ -414,49 +414,67 @@ def download_excel():
     )
 
 
-from flask import Response
+from flask import send_file
+import tempfile
+from openpyxl import Workbook
+from src.models import QuoteResult
 
-@app.route("/api/download_full_csv")
-def download_full_csv():
+@app.route("/api/download_full_db")
+def download_full_db():
     if not SUPABASE_URL or not SUPABASE_KEY:
         return "Supabase no configurado", 500
         
-    def generate():
-        url = f"{SUPABASE_URL}/rest/v1/remittance_quotes?order=timestamp_scrape.desc"
-        headers = {
-            "apikey": SUPABASE_KEY,
-            "Authorization": f"Bearer {SUPABASE_KEY}",
-            "Accept": "text/csv"
-        }
-        page_size = 1000
-        offset = 0
-        first_page = True
+    url = f"{SUPABASE_URL}/rest/v1/remittance_quotes?order=timestamp_scrape.desc"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # 1. Fetch entire database jumping the limits
+    all_rows = _supabase_get_all(url, headers, timeout=60)
+    if all_rows is None:
+        return "Error obteniendo datos de Supabase", 500
         
-        while True:
-            page_headers = {**headers, "Range": f"{offset}-{offset + page_size - 1}"}
-            resp = requests.get(url, headers=page_headers, timeout=30)
-            if not resp.ok: 
-                break
-            
-            lines = resp.text.splitlines()
-            if not lines: 
-                break
-                
-            if first_page:
-                yield resp.text + "\n"
-                first_page = False
-            else:
-                if len(lines) > 1:
-                    yield "\n".join(lines[1:]) + "\n"
-                    
-            if len(lines) - 1 < page_size:
-                break
-            offset += page_size
-            
-    return Response(
-        generate(), 
-        mimetype="text/csv", 
-        headers={"Content-Disposition": "attachment;filename=historico_remesas_completo.csv"}
+    # 2. Build Excel file in a temporary location
+    _, temp_path = tempfile.mkstemp(suffix=".xlsx")
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Histórico Completo"
+    
+    # Headers
+    headers_list = QuoteResult.csv_headers()
+    ws.append(headers_list)
+    
+    # Rows
+    for row in all_rows:
+        ws.append([
+            row.get("timestamp_scrape"),
+            row.get("agente"),
+            row.get("pais_destino"),
+            row.get("moneda_origen"),
+            row.get("moneda_destino"),
+            row.get("categoria_recaudacion"),
+            row.get("categoria_dispersion"),
+            row.get("monto_enviado"),
+            row.get("monto_recibido"),
+            row.get("tasa_cambio_normalizada"),
+            row.get("tasa_cambio_final"),
+            float(row.get("fee_base", 0) or 0),
+            float(row.get("fee_impuesto", 0) or 0),
+            float(row.get("total_cobrado", 0) or 0),
+            row.get("metodo_recaudacion"),
+            row.get("metodo_dispersion")
+        ])
+    
+    wb.save(temp_path)
+    
+    return send_file(
+        temp_path,
+        as_attachment=True,
+        download_name="historico_remesas_completo.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
 
