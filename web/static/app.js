@@ -112,10 +112,10 @@ function renderHistoryChart(data) {
         
         if (!aggregated[dateStr]) aggregated[dateStr] = {};
         if (!aggregated[dateStr][r.agente]) {
-            aggregated[dateStr][r.agente] = r.tasa_cambio_final;
+            aggregated[dateStr][r.agente] = { tc: r.tasa_cambio_final, amt: r.monto_enviado };
         } else {
-            if (r.tasa_cambio_final > aggregated[dateStr][r.agente]) {
-                aggregated[dateStr][r.agente] = r.tasa_cambio_final;
+            if (r.tasa_cambio_final > aggregated[dateStr][r.agente].tc) {
+                aggregated[dateStr][r.agente] = { tc: r.tasa_cambio_final, amt: r.monto_enviado };
             }
         }
     });
@@ -130,10 +130,12 @@ function renderHistoryChart(data) {
     
     const agents = Array.from(new Set(data.map(d => d.agente)));
     const datasets = agents.map(ag => {
-        const mappedData = labels.map(day => aggregated[day][ag] || null);
+        const mappedData = labels.map(day => aggregated[day][ag] ? aggregated[day][ag].tc : null);
+        const mappedAmts = labels.map(day => aggregated[day][ag] ? aggregated[day][ag].amt : null);
         return {
             label: ag,
             data: mappedData,
+            amts: mappedAmts,
             borderColor: agCol[ag] || '#999',
             backgroundColor: agCol[ag] || '#999',
             borderWidth: 3,
@@ -160,7 +162,13 @@ function renderHistoryChart(data) {
                             if (context.parsed.y !== null) {
                                 label += context.parsed.y.toLocaleString('es-CL', {minimumFractionDigits: 2, maximumFractionDigits: 4});
                             }
-                            return label + ` CLP/${sampleCurrency}`;
+                            label += ` CLP/${sampleCurrency}`;
+                            
+                            const amt = context.dataset.amts[context.dataIndex];
+                            if (amt) {
+                                label += ` (Cotizado por: $${amt.toLocaleString('es-CL')} CLP)`;
+                            }
+                            return label;
                         }
                     }
                 }

@@ -268,7 +268,7 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
         "Content-Type": "application/json"
     }
     
-    query_url = f"{url}?select=timestamp_scrape,agente,tasa_cambio_final&pais_destino=eq.{country}"
+    query_url = f"{url}?select=timestamp_scrape,agente,tasa_cambio_final,monto_enviado&pais_destino=eq.{country}"
     if currency:
         query_url += f"&moneda_destino=eq.{currency}"
     if cat_rec:
