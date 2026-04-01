@@ -75,6 +75,32 @@ def save_to_supabase(results):
             logging.error(f"Respuesta Supabase: {e.response.text}")
         return False
 
+def _supabase_get_all(url, headers, timeout=20):
+    """Trae todos los registros saltando el límite de 1000 filas de Supabase."""
+    all_results = []
+    page_size = 1000
+    offset = 0
+    
+    while True:
+        page_headers = {**headers, "Range": f"{offset}-{offset + page_size - 1}"}
+        resp = requests.get(url, headers=page_headers, timeout=timeout)
+        if not resp.ok:
+            if not all_results:
+                return None
+            break
+            
+        data = resp.json()
+        if not data:
+            break
+            
+        all_results.extend(data)
+        if len(data) < page_size:
+            break
+            
+        offset += page_size
+        
+    return all_results
+
 def fetch_latest_from_supabase():
     if not SUPABASE_URL or not SUPABASE_KEY:
         return None
@@ -97,12 +123,9 @@ def fetch_latest_from_supabase():
         
         # 2. Traer todos los registros con ese timestamp
         data_url = f"{url}?timestamp_scrape=eq.{latest_ts}"
-        data_headers = {**headers, "Range": "0-9999"}
-        data_resp = requests.get(data_url, headers=data_headers, timeout=15)
-        if not data_resp.ok:
+        results = _supabase_get_all(data_url, headers, timeout=15)
+        if results is None:
             return None
-            
-        results = data_resp.json()
         
         # Mapear 'timestamp_scrape' a 'timestamp' para compatibilidad con el frontend
         for r in results:
@@ -174,13 +197,11 @@ def fetch_penultima_from_supabase():
         
         # Get data for THIS specific timestamp
         data_url = f"{url}?timestamp_scrape=eq.{penultima_ts}"
-        data_headers = {**headers, "Range": "0-9999"}
-        data_resp = requests.get(data_url, headers=data_headers, timeout=20)
+        results = _supabase_get_all(data_url, headers, timeout=20)
         
-        if not data_resp.ok:
+        if results is None:
             return None
             
-        results = data_resp.json()
         for r in results:
             r["timestamp"] = r.pop("timestamp_scrape", "")
             
@@ -214,13 +235,10 @@ def fetch_range_from_supabase(days):
     
     try:
         data_url = f"{url}?timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.desc"
-        data_headers = {**headers, "Range": "0-9999"}
-        data_resp = requests.get(data_url, headers=data_headers, timeout=30)
-        if not data_resp.ok:
+        results = _supabase_get_all(data_url, headers, timeout=30)
+        if results is None:
             return None
             
-        results = data_resp.json()
-        
         # Mapear 'timestamp_scrape' a 'timestamp'
         for r in results:
             r["timestamp"] = r.pop("timestamp_scrape", "")
@@ -264,17 +282,12 @@ def fetch_history_from_supabase(country, days=7, currency=None, cat_rec=None, ca
         
     query_url += f"&timestamp_scrape=gte.{threshold_date}&order=timestamp_scrape.asc"
     
-    # Supabase defaults to 1000 rows if no Range header is provided.
-    # Since historical data (like 365 days) can easily exceed 1000 rows for a country,
-    # we must expand the Range. 50000 should be safe for a single country's history.
-    hist_headers = {**headers, "Range": "0-49999"}
-    
+    # Eliminamos el uso manual de postgREST limit/range y delegamos al helper
     try:
-        resp = requests.get(query_url, headers=hist_headers, timeout=15)
-        if not resp.ok:
+        results = _supabase_get_all(query_url, headers, timeout=15)
+        if results is None:
             return []
-        results = resp.json()
-        
+            
         # Mapear
         for r in results:
             r["timestamp"] = r.pop("timestamp_scrape", "")
